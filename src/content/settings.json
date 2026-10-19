@@ -1,0 +1,40 @@
+{
+  "business": {
+    "name": "Digifier",
+    "siteName": "Digifier UK",
+    "legalName": "Digifier Consulting Ltd",
+    "companyNumber": "",
+    "registeredIn": "England & Wales",
+    "registeredAddress": "",
+    "icoNumber": "",
+    "url": "https://www.digifier.co.uk",
+    "tagline": "All things digital",
+    "pricesIncludeVat": true,
+    "groupSiteName": "",
+    "groupSiteUrl": ""
+  },
+  "contact": {
+    "email": "hello@digifier.co.uk",
+    "privacyEmail": "hello@digifier.co.uk",
+    "phoneDisplay": "+44-7867244213",
+    "phoneE164": "+447867244213",
+    "whatsapp": "447867244213",
+    "whatsappDefaultMessage": "Welcome to Digifier!",
+    "hours": "Mon-FRi, 9:00-18:00"
+  },
+  "social": {
+    "instagram": "",
+    "linkedin": "",
+    "facebook": "",
+    "x": "",
+    "youtube": "",
+    "tiktok": ""
+  },
+  "integrations": {
+    "ga4Id": "",
+    "formEndpoint": ""
+  },
+  "legal": {
+    "lastUpdated": "20 October 2026"
+  }
+}
