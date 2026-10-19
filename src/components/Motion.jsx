@@ -1,29 +1,45 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { Pause, Play } from 'lucide-react'
 import { useMotionPaused, setMotionPaused } from '../lib/motion.js'
-import { m, useInView, useMotionValue, useSpring, animate, useReducedMotion } from 'framer-motion'
+import { m, useInView, useMotionValue, useSpring, useScroll, useTransform, animate, useReducedMotion } from 'framer-motion'
 
-const ease = [0.22, 1, 0.36, 1]
+// Motion tokens: every animation on the site draws from these so it all shares one rhythm.
+// CSS mirrors them as --ease-out / --dur-* in styles.css.
+export const EASE = {
+  out: [0.22, 1, 0.36, 1], // arriving: fast start, long gentle settle
+  in: [0.55, 0, 1, 0.45], // leaving
+  inOut: [0.65, 0, 0.35, 1],
+}
+export const DUR = { fast: 0.2, base: 0.55, slow: 0.8 }
+export const SPRING = {
+  soft: { type: 'spring', stiffness: 220, damping: 28, mass: 0.6 },
+  snappy: { type: 'spring', stiffness: 420, damping: 32 },
+}
+export const STAGGER = 0.05
+
+const ease = EASE.out
+// Reveal as content approaches, not after it is already mid-screen.
+const VIEWPORT = { once: true, margin: '0px 0px -12% 0px' }
 
 export const fadeUp = {
-  hidden: { opacity: 0, y: 28 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease } },
+  hidden: { opacity: 0, y: 18 },
+  visible: { opacity: 1, y: 0, transition: { duration: DUR.base, ease } },
 }
 
-export const stagger = (each = 0.08, delay = 0) => ({
+export const stagger = (each = STAGGER, delay = 0) => ({
   hidden: {},
   visible: { transition: { staggerChildren: each, delayChildren: delay } },
 })
 
-export function Reveal({ as = 'div', children, delay = 0, y = 28, className, ...rest }) {
+export function Reveal({ as = 'div', children, delay = 0, y = 18, className, ...rest }) {
   const M = m[as]
   return (
     <M
       className={className}
       initial={{ opacity: 0, y }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.2 }}
-      transition={{ duration: 0.6, ease, delay }}
+      viewport={VIEWPORT}
+      transition={{ duration: DUR.base, ease, delay }}
       {...rest}
     >
       {children}
@@ -31,10 +47,10 @@ export function Reveal({ as = 'div', children, delay = 0, y = 28, className, ...
   )
 }
 
-export function Stagger({ as = 'div', children, className, each = 0.08, amount = 0.15, ...rest }) {
+export function Stagger({ as = 'div', children, className, each = STAGGER, ...rest }) {
   const M = m[as]
   return (
-    <M className={className} variants={stagger(each)} initial="hidden" whileInView="visible" viewport={{ once: true, amount }} {...rest}>
+    <M className={className} variants={stagger(each)} initial="hidden" whileInView="visible" viewport={VIEWPORT} {...rest}>
       {children}
     </M>
   )
@@ -49,25 +65,69 @@ export function Item({ as = 'div', children, className, ...rest }) {
   )
 }
 
-// Splits a headline into words that rise in sequence.
+// Splits a headline into words that rise out of a mask in sequence.
+// `instant`: above-the-fold headings animate with pure CSS from first paint, without waiting
+// for JavaScript, so the page's largest text isn't held back (and works with JS off).
 // Pass labelled={false} when a parent element already carries the accessible name.
-export function SplitWords({ text, className, as = 'span', delay = 0, labelled = true }) {
+export function SplitWords({ text, className, as = 'span', delay = 0, labelled = true, instant = false }) {
+  const words = text.split(' ')
+  if (instant) {
+    const T = as
+    return (
+      <T className={className} aria-label={labelled ? text : undefined} style={{ '--d': `${Math.round(delay * 1000)}ms` }}>
+        {words.map((w, i) => (
+          <Fragment key={i}>
+            <span className="word-mask" aria-hidden="true">
+              <span className="word word-rise" style={{ '--i': i }}>{w}</span>
+            </span>{' '}
+          </Fragment>
+        ))}
+      </T>
+    )
+  }
   const M = m[as]
   return (
-    <M className={className} aria-label={labelled ? text : undefined} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger(0.06, delay)}>
-      {text.split(' ').map((w, i) => (
+    <M className={className} aria-label={labelled ? text : undefined} initial="hidden" whileInView="visible" viewport={VIEWPORT} variants={stagger(0.04, delay)}>
+      {words.map((w, i) => (
         <Fragment key={i}>
           <span className="word-mask" aria-hidden="true">
-            <m.span
-              className="word"
-              variants={{ hidden: { y: '110%' }, visible: { y: 0, transition: { duration: 0.7, ease } } }}
-            >
+            <m.span className="word" variants={{ hidden: { y: '110%' }, visible: { y: 0, transition: { duration: 0.7, ease } } }}>
               {w}
             </m.span>
           </span>{' '}
         </Fragment>
       ))}
     </M>
+  )
+}
+
+function ScrollWord({ progress, range, still, children }) {
+  // 0.5 keeps unlit words above WCAG AA contrast (≈5:1 on the page background).
+  const opacity = useTransform(progress, range, [0.5, 1])
+  return (
+    <>
+      <m.span className="sw" style={{ opacity: still ? 1 : opacity }}>{children}</m.span>{' '}
+    </>
+  )
+}
+
+// A statement that brightens word by word as it scrolls into the reading zone.
+// Fully opaque by the time it reaches the upper-middle of the screen, so it never rests faded;
+// static for reduced-motion users and when animations are paused.
+export function ScrollWords({ text, as: T = 'p', className = '' }) {
+  const ref = useRef(null)
+  const reduce = useReducedMotion()
+  const paused = useMotionPaused()
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start 90%', 'end 55%'] })
+  const words = text.split(' ')
+  return (
+    <T ref={ref} className={`scroll-words ${className}`}>
+      {words.map((w, i) => (
+        <ScrollWord key={i} progress={scrollYProgress} range={[i / words.length, Math.min(1, (i + 2) / words.length)]} still={reduce || paused}>
+          {w}
+        </ScrollWord>
+      ))}
+    </T>
   )
 }
 
@@ -78,7 +138,7 @@ export function Counter({ value, decimals = 0, suffix = '' }) {
   const [n, setN] = useState(value)
   useEffect(() => {
     if (!inView || reduce) return
-    const c = animate(0, value, { duration: 1.6, ease: 'easeOut', onUpdate: setN })
+    const c = animate(0, value, { duration: 1.6, ease: EASE.out, onUpdate: setN })
     return () => c.stop()
   }, [inView, value, reduce])
   return (
@@ -89,14 +149,15 @@ export function Counter({ value, decimals = 0, suffix = '' }) {
   )
 }
 
-// Magnetic hover: element drifts toward the cursor, springs back on leave.
-export function Magnetic({ children, strength = 0.3, className }) {
+// Magnetic hover: element drifts slightly toward the cursor, springs back on leave. Mouse/pen only.
+export function Magnetic({ children, strength = 0.2, className }) {
   const ref = useRef(null)
   const x = useMotionValue(0)
   const y = useMotionValue(0)
-  const sx = useSpring(x, { stiffness: 250, damping: 15, mass: 0.4 })
-  const sy = useSpring(y, { stiffness: 250, damping: 15, mass: 0.4 })
+  const sx = useSpring(x, { stiffness: 260, damping: 18, mass: 0.4 })
+  const sy = useSpring(y, { stiffness: 260, damping: 18, mass: 0.4 })
   const onMove = (e) => {
+    if (e.pointerType === 'touch') return
     const r = ref.current.getBoundingClientRect()
     x.set((e.clientX - (r.left + r.width / 2)) * strength)
     y.set((e.clientY - (r.top + r.height / 2)) * strength)
@@ -112,34 +173,17 @@ export function Magnetic({ children, strength = 0.3, className }) {
   )
 }
 
-// 3D tilt card following the pointer.
-export function Tilt({ children, className, max = 6, ...rest }) {
-  const rx = useMotionValue(0)
-  const ry = useMotionValue(0)
-  const srx = useSpring(rx, { stiffness: 200, damping: 20 })
-  const sry = useSpring(ry, { stiffness: 200, damping: 20 })
+// Card with a soft light that follows the cursor across its surface and border (no 3D tilt).
+// The glow is pure CSS driven by --mx/--my, so moving the mouse never re-renders React.
+export function Spotlight({ children, className, ...rest }) {
   const onMove = (e) => {
+    if (e.pointerType === 'touch') return
     const r = e.currentTarget.getBoundingClientRect()
-    const px = (e.clientX - r.left) / r.width - 0.5
-    const py = (e.clientY - r.top) / r.height - 0.5
-    ry.set(px * max * 2)
-    rx.set(-py * max * 2)
-    e.currentTarget.style.setProperty('--mx', `${(px + 0.5) * 100}%`)
-    e.currentTarget.style.setProperty('--my', `${(py + 0.5) * 100}%`)
-  }
-  const reset = () => {
-    rx.set(0)
-    ry.set(0)
+    e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
+    e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
   }
   return (
-    <m.div
-      className={className}
-      style={{ rotateX: srx, rotateY: sry, transformPerspective: 900 }}
-      onPointerMove={onMove}
-      onPointerLeave={reset}
-      variants={fadeUp}
-      {...rest}
-    >
+    <m.div className={`spotlight ${className}`} onPointerMove={onMove} variants={fadeUp} {...rest}>
       {children}
     </m.div>
   )

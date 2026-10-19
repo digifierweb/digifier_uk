@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { ArrowUpRight } from 'lucide-react'
 import Seo, { crumbs } from '../components/Seo.jsx'
 import { PageHero, CtaBand } from '../components/Blocks.jsx'
-import { Stagger, Tilt } from '../components/Motion.jsx'
+import { Stagger, Spotlight } from '../components/Motion.jsx'
 import { ServiceIcon } from '../components/Icons.jsx'
 import { SERVICES, priceOf } from '../data/services.js'
 import { fmt, SITE } from '../data/site.js'
@@ -42,7 +42,7 @@ export default function Services() {
         <div className="container">
           <Stagger className="service-list" each={0.07}>
             {SERVICES.map((s, i) => (
-              <Tilt key={s.slug} className="service-row" max={3}>
+              <Spotlight key={s.slug} className="service-row">
                 <Link to={`/services/${s.slug}`} className="service-row-link">
                   <span className="bento-num">{String(i + 1).padStart(2, '0')}</span>
                   <span className="icon-wrap"><ServiceIcon name={s.icon} size={26} /></span>
@@ -58,7 +58,7 @@ export default function Services() {
                     <span className="round-arrow"><ArrowUpRight size={20} aria-hidden="true" /></span>
                   </div>
                 </Link>
-              </Tilt>
+              </Spotlight>
             ))}
           </Stagger>
         </div>

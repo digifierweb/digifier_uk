@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { AnimatePresence, m, useScroll, useTransform, useReducedMotion } from 'framer-motion'
 import { ArrowUpRight, ArrowRight, TrendingUp, Zap, ShieldCheck } from 'lucide-react'
 import Seo, { orgSchema, faqSchema } from '../components/Seo.jsx'
-import { Reveal, Stagger, Item, SplitWords, Counter, Magnetic, Tilt, MotionToggle } from '../components/Motion.jsx'
+import { Reveal, Stagger, Item, SplitWords, ScrollWords, Counter, Magnetic, Spotlight, MotionToggle } from '../components/Motion.jsx'
 import { useMotionPaused } from '../lib/motion.js'
 import { SectionHead, PricingCard, PricingTabs, Faq, Marquee, Testimonials, CtaBand } from '../components/Blocks.jsx'
 import { ServiceIcon, WhatsAppIcon } from '../components/Icons.jsx'
@@ -47,26 +47,35 @@ function Hero() {
   const y2 = useTransform(scrollYProgress, [0, 1], [0, -120])
   const fade = useTransform(scrollYProgress, [0, 0.8], [1, 0])
   const paused = useMotionPaused()
-  const float = (ys) => (paused ? { opacity: 1, x: 0, y: 0 } : { opacity: 1, x: 0, y: ys })
+  const float = (ys) => (paused ? { y: 0 } : { y: ys })
+  // Cursor spotlight: CSS variables only (smoothed by a registered @property transition), no React re-render.
+  const onPointerMove = (e) => {
+    if (e.pointerType === 'touch') return
+    const r = e.currentTarget.getBoundingClientRect()
+    e.currentTarget.style.setProperty('--sx', `${((e.clientX - r.left) / r.width) * 100}%`)
+    e.currentTarget.style.setProperty('--sy', `${((e.clientY - r.top) / r.height) * 100}%`)
+  }
 
   return (
-    <section className="hero" ref={ref}>
+    <section className="hero" ref={ref} onPointerMove={onPointerMove}>
       <div className="hero-grid-bg" aria-hidden="true" />
+      <div className="hero-spot" aria-hidden="true" />
       <m.div className="orb orb-a" style={{ y: y1 }} aria-hidden="true" />
       <m.div className="orb orb-b" style={{ y: y2 }} aria-hidden="true" />
       <m.div className="container hero-inner" style={{ opacity: fade }}>
-        <m.p className="pill" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+        {/* Entrance is CSS (.enter / .word-rise) so it plays from first paint, before JavaScript loads. */}
+        <p className="pill enter" style={{ '--d': '0ms' }}>
           <span className="pill-dot" /> UK digital marketing &amp; web agency
-        </m.p>
+        </p>
         <h1 className="display" aria-label={`We help brands stand out with ${WORDS.join(', ')}`}>
-          <SplitWords text="We help brands stand out with" delay={0.15} labelled={false} />
-          <RotatingWord />
+          <SplitWords text="We help brands stand out with" delay={0.08} labelled={false} instant />
+          <span className="enter-mask"><span className="enter-rise" style={{ '--d': '420ms' }}><RotatingWord /></span></span>
         </h1>
-        <m.p className="lead hero-lead" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 0.6 }}>
+        <p className="lead hero-lead enter" style={{ '--d': '520ms' }}>
           Strategy-first design, marketing and technology for ambitious UK businesses. Websites from £150, marketing plans from
           £150/month — all with transparent reporting.
-        </m.p>
-        <m.div className="btn-row" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.75, duration: 0.6 }}>
+        </p>
+        <div className="btn-row enter" style={{ '--d': '620ms' }}>
           <Magnetic>
             <Link to="/contact" className="btn btn-primary btn-lg">
               Get a free consultation <ArrowUpRight size={18} aria-hidden="true" />
@@ -77,8 +86,8 @@ function Hero() {
               <WhatsAppIcon size={20} /> WhatsApp us
             </a>
           </Magnetic>
-        </m.div>
-        <m.div className="hero-proof" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}>
+        </div>
+        <div className="hero-proof enter" style={{ '--d': '760ms' }}>
           <div className="avatars" aria-hidden="true">
             {TESTIMONIALS.slice(0, 4).map((t) => (
               <span key={t.name}>{t.name[0]}</span>
@@ -88,19 +97,22 @@ function Hero() {
             <strong>4.9★</strong> from 50+ happy clients
           </p>
           <MotionToggle className="hero-motion" />
-        </m.div>
+        </div>
       </m.div>
 
       <div className="hero-chips" aria-hidden="true">
-        <m.div className="chip chip-1" initial={{ opacity: 0, x: 40 }} animate={float([0, -10, 0])} transition={{ opacity: { delay: 1.1 }, x: { delay: 1.1 }, y: { repeat: Infinity, duration: 5, ease: 'easeInOut' } }}>
-          <TrendingUp size={18} /> <span><strong>SEO-first</strong> builds</span>
-        </m.div>
-        <m.div className="chip chip-2" initial={{ opacity: 0, x: 40 }} animate={float([0, 12, 0])} transition={{ opacity: { delay: 1.3 }, x: { delay: 1.3 }, y: { repeat: Infinity, duration: 6, ease: 'easeInOut' } }}>
-          <Zap size={18} /> <span><strong>5–7 day</strong> launches</span>
-        </m.div>
-        <m.div className="chip chip-3" initial={{ opacity: 0, x: 40 }} animate={float([0, -8, 0])} transition={{ opacity: { delay: 1.5 }, x: { delay: 1.5 }, y: { repeat: Infinity, duration: 4.5, ease: 'easeInOut' } }}>
-          <ShieldCheck size={18} /> <span>UK GDPR ready</span>
-        </m.div>
+        {[
+          ['chip-1', '900ms', [0, -10, 0], 5, <><TrendingUp size={18} /> <span><strong>SEO-first</strong> builds</span></>],
+          ['chip-2', '1020ms', [0, 12, 0], 6, <><Zap size={18} /> <span><strong>5–7 day</strong> launches</span></>],
+          ['chip-3', '1140ms', [0, -8, 0], 4.5, <><ShieldCheck size={18} /> <span>UK GDPR ready</span></>],
+        ].map(([cls, d, ys, duration, body]) => (
+          // Outer: CSS entrance. Inner: Framer's gentle float (pausable). Separate elements so the transforms don't fight.
+          <div key={cls} className="enter enter-x" style={{ '--d': d }}>
+            <m.div className={`chip ${cls}`} animate={float(ys)} transition={{ y: { repeat: Infinity, duration, ease: 'easeInOut' } }}>
+              {body}
+            </m.div>
+          </div>
+        ))}
       </div>
     </section>
   )
@@ -115,10 +127,10 @@ function About() {
           <SplitWords as="h2" className="h2" text="Creativity meets performance to power digital growth." />
         </div>
         <div>
-          <Reveal as="p" className="lead">
-            We help brands grow through smart strategy, compelling content and performance-focused campaigns. From social media to
-            SEO, we craft tailored solutions that deliver real, measurable results.
-          </Reveal>
+          <ScrollWords
+            className="lead statement"
+            text="We help brands grow through smart strategy, compelling content and performance-focused campaigns. From social media to SEO, we craft tailored solutions that deliver real, measurable results."
+          />
           <div className="bars">
             {[
               ['Digital marketing', 95],
@@ -155,7 +167,7 @@ function ServicesGrid() {
         <SectionHead eyebrow="02 · Services" title="A full suite of digital services" text="Nine specialist services, one accountable team. Pick one or let us build your whole growth engine." />
         <Stagger className="bento" each={0.07}>
           {SERVICES.map((s, i) => (
-            <Tilt key={s.slug} className={`bento-card ${i === 0 || i === 4 ? 'wide' : ''}`}>
+            <Spotlight key={s.slug} className={`bento-card ${i === 0 || i === 4 ? 'wide' : ''}`}>
               <Link to={`/services/${s.slug}`} className="bento-link">
                 <span className="bento-num">{String(i + 1).padStart(2, '0')}</span>
                 <span className="icon-wrap"><ServiceIcon name={s.icon} size={26} /></span>
@@ -163,7 +175,7 @@ function ServicesGrid() {
                 <p>{s.short}</p>
                 <span className="bento-more">Explore <ArrowUpRight size={16} aria-hidden="true" /></span>
               </Link>
-            </Tilt>
+            </Spotlight>
           ))}
         </Stagger>
       </div>
@@ -188,6 +200,18 @@ function Stats() {
   )
 }
 
+// The dot fills with the brand gradient as the progress line reaches its step.
+function ProcessDot({ progress, at, n }) {
+  const fill = useTransform(progress, [Math.max(0, at - 0.12), at], [0, 1])
+  const scale = useTransform(progress, [Math.max(0, at - 0.12), at], [0.6, 1])
+  return (
+    <span className="process-dot">
+      <m.span className="process-dot-fill" style={{ opacity: fill, scale }} aria-hidden="true" />
+      <span className="process-dot-num">{n}</span>
+    </span>
+  )
+}
+
 function Process() {
   const ref = useRef(null)
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start 75%', 'end 60%'] })
@@ -201,7 +225,7 @@ function Process() {
           </div>
           {PROCESS.map(([t, time, d], i) => (
             <Reveal key={t} className="process-step" delay={i * 0.05}>
-              <span className="process-dot">{i + 1}</span>
+              <ProcessDot progress={scrollYProgress} at={i / (PROCESS.length - 1)} n={i + 1} />
               <div>
                 <span className="process-time">{time}</span>
                 <h3 className="h3">{t}</h3>

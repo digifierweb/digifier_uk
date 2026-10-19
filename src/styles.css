@@ -1,6 +1,11 @@
 @import '@fontsource-variable/inter';
 @import '@fontsource-variable/bricolage-grotesque';
 
+/* Registered so they can be smoothly transitioned/animated (cursor spotlight, rotating border). */
+@property --sx { syntax: '<percentage>'; inherits: true; initial-value: 72%; }
+@property --sy { syntax: '<percentage>'; inherits: true; initial-value: 28%; }
+@property --angle { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+
 :root {
   --bg: #07070d;
   --bg-2: #0d0d17;
@@ -19,6 +24,12 @@
   --danger: #ff6b81;
   --grad: linear-gradient(120deg, #a78bfa 0%, #ec4899 55%, #f59e0b 100%);
   --grad-btn: linear-gradient(120deg, #7c3aed, #db2777);
+  /* Motion tokens (mirrored in Motion.jsx) */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 0.2s;
+  --dur-base: 0.55s;
+  --dur-slow: 0.8s;
   --radius: 20px;
   --radius-sm: 12px;
   --shadow: 0 20px 60px -20px rgba(0, 0, 0, 0.6);
@@ -96,7 +107,6 @@ input, select, textarea { font: inherit; color: inherit; }
 .btn-row { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 32px; }
 .center-row { justify-content: center; }
 .text-link { display: inline-flex; align-items: center; gap: 8px; color: var(--lime); font-weight: 600; margin-top: 28px; }
-.text-link:hover { gap: 12px; }
 .link-btn { color: var(--primary-2); text-decoration: underline; padding: 0; }
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -485,4 +495,69 @@ a.contact-card:hover { border-color: var(--primary-2); }
   .motion-toggle { display: none; }
   .marquee-track, .t-track, .wa-ring, .cta-orb { animation: none !important; }
   .t-marquee { overflow-x: auto; }
+}
+
+/* ---------- Motion system ---------- */
+
+/* CSS-first entrances for above-the-fold content: they play from first paint, before JS loads. */
+.word-rise { animation: rise var(--dur-slow) var(--ease-out) both; animation-delay: calc(var(--d, 0ms) + var(--i, 0) * 45ms); }
+.enter { animation: enter 0.7s var(--ease-out) both; animation-delay: var(--d, 0ms); }
+.enter-x { animation-name: enter-x; }
+.enter-mask { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: 0.12em; margin-bottom: -0.12em; }
+.enter-rise { display: inline-block; animation: rise var(--dur-slow) var(--ease-out) both; animation-delay: var(--d, 0ms); }
+@keyframes rise { from { transform: translateY(110%); } }
+@keyframes enter { from { opacity: 0; transform: translateY(16px); } }
+@keyframes enter-x { from { opacity: 0; transform: translateX(32px); } }
+
+/* Hero: soft light that trails the cursor (mouse/pen only). */
+.hero { transition: --sx 0.7s var(--ease-out), --sy 0.7s var(--ease-out); }
+.hero-spot { position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0; transition: opacity 0.8s var(--ease-out);
+  background: radial-gradient(640px circle at var(--sx) var(--sy), rgba(139, 92, 246, 0.17), rgba(236, 72, 153, 0.06) 40%, transparent 65%); }
+@media (hover: hover) and (pointer: fine) { .hero:hover .hero-spot { opacity: 1; } }
+
+/* Spotlight cards: glow follows the cursor across the surface and lights the border nearest it. */
+.spotlight { position: relative; }
+.service-row::before { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity 0.35s var(--ease-out); background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgba(139, 92, 246, 0.12), transparent 50%); }
+.service-row:hover::before { opacity: 1; }
+.service-row-link { position: relative; }
+.bento-card { transform-style: flat; transition: border-color 0.3s; }
+.spotlight::after { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none; opacity: 0; transition: opacity 0.35s var(--ease-out);
+  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 0%), rgba(216, 180, 254, 0.85), transparent 65%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+.spotlight:hover::after, .spotlight:focus-within::after { opacity: 1; }
+.bento-card .icon-wrap { transition: transform 0.45s var(--ease-out); }
+.bento-card:hover .icon-wrap { transform: translateY(-3px) scale(1.06); }
+
+/* Arrows nudge in the direction they point. */
+.btn .lucide-arrow-up-right, .text-link svg, .bento-more svg, .op-right svg, .round-arrow svg { transition: transform 0.35s var(--ease-out); }
+.btn:hover .lucide-arrow-up-right, .bento-card:hover .bento-more svg { transform: translate(2px, -2px); }
+.btn:hover .lucide-arrow-right, .text-link:hover svg, .other-price:hover .op-right svg { transform: translateX(4px); }
+.btn:active { transform: scale(0.97); }
+
+/* Statement that brightens word by word on scroll. */
+.statement { color: var(--text); font-size: clamp(1.2rem, 2vw, 1.5rem); line-height: 1.5; letter-spacing: -0.01em; }
+.scroll-words .sw { display: inline; }
+
+/* Process: dots fill as the progress line reaches them. */
+.process-dot { position: relative; overflow: hidden; }
+.process-dot-fill { position: absolute; inset: 0; border-radius: 50%; background: var(--grad-btn); }
+.process-dot-num { position: relative; }
+
+/* Footer sign-off rises out of a mask. */
+.footer-big-wrap { overflow: hidden; margin-bottom: 64px; padding-bottom: 0.08em; }
+.footer-big-wrap .footer-big { margin-bottom: 0; }
+
+/* Most popular plan: slowly circling gradient border. */
+.price-card.popular {
+  background: linear-gradient(var(--surface), var(--surface)) padding-box,
+    conic-gradient(from var(--angle), #a78bfa, #ec4899, #f59e0b, #a78bfa) border-box;
+  animation: orbit 9s linear infinite;
+}
+@keyframes orbit { to { --angle: 360deg; } }
+.motion-paused .price-card.popular { animation-play-state: paused; }
+
+@media (prefers-reduced-motion: reduce) {
+  .word-rise, .enter, .enter-rise, .price-card.popular { animation: none !important; }
+  .hero-spot { display: none; }
+  .btn:active { transform: none; }
 }

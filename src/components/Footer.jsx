@@ -1,4 +1,6 @@
+import { useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { m, useScroll, useTransform } from 'framer-motion'
 import { Mail, Phone, Clock, Instagram } from 'lucide-react'
 import { SERVICES } from '../data/services.js'
 import { SITE, waLink, companyLine } from '../data/site.js'
@@ -6,12 +8,25 @@ import { openCookieSettings } from '../lib/consent.js'
 import { Logo } from './Header.jsx'
 import { WhatsAppIcon } from './Icons.jsx'
 
+// The closing line rises and settles as the footer scrolls into view.
+function FooterBig() {
+  const ref = useRef(null)
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end 85%'] })
+  const y = useTransform(scrollYProgress, [0, 1], ['45%', '0%'])
+  const opacity = useTransform(scrollYProgress, [0, 0.6, 1], [0, 0.6, 1])
+  return (
+    <div className="footer-big-wrap" ref={ref} aria-hidden="true">
+      <m.div className="footer-big" style={{ y, opacity }}>Let's grow.</m.div>
+    </div>
+  )
+}
+
 export default function Footer() {
   return (
     <footer className="site-footer">
       <div className="footer-glow" aria-hidden="true" />
       <div className="container">
-        <div className="footer-big" aria-hidden="true">Let's grow.</div>
+        <FooterBig />
         <div className="footer-grid">
           <div className="footer-brand">
             <Logo />

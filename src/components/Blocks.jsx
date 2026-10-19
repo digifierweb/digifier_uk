@@ -256,9 +256,10 @@ export function PageHero({ eyebrow, title, text, crumbs, children }) {
       <div className="hero-grid-bg" aria-hidden="true" />
       <div className="container">
         {crumbs && <Breadcrumbs items={crumbs} />}
-        {eyebrow && <Reveal as="p" className="eyebrow">{eyebrow}</Reveal>}
-        <SplitWords as="h1" className="h1" text={title} />
-        {text && <Reveal as="p" className="lead hero-lead" delay={0.2}>{text}</Reveal>}
+        {/* CSS entrance: plays from first paint, before JavaScript, so the page title isn't held back. */}
+        {eyebrow && <p className="eyebrow enter" style={{ '--d': '0ms' }}>{eyebrow}</p>}
+        <SplitWords as="h1" className="h1" text={title} delay={0.06} instant />
+        {text && <p className="lead hero-lead enter" style={{ '--d': '380ms' }}>{text}</p>}
         {children}
       </div>
     </section>
