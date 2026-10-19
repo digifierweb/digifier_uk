@@ -14,6 +14,7 @@ import Contact from './pages/Contact.jsx'
 import { PrivacyPolicy, CookiePolicy, Terms, AccessibilityStatement } from './pages/Legal.jsx'
 import Sitemap from './pages/Sitemap.jsx'
 import NotFound from './pages/NotFound.jsx'
+import { initClickTracking } from './lib/analytics.js'
 
 function ScrollProgress() {
   const { scrollYProgress } = useScroll()
@@ -35,6 +36,8 @@ export default function App() {
   useEffect(() => {
     if (!location.hash) window.scrollTo({ top: 0 })
   }, [location.pathname, location.hash])
+
+  useEffect(() => initClickTracking(), [])
 
   return (
     // LazyMotion + `m` components keep unused animation features out of the bundle; strict flags any stray `motion.*`.

@@ -1,5 +1,6 @@
 import { Helmet } from 'react-helmet-async'
 import { SITE } from '../data/site.js'
+import { trackPageView } from '../lib/analytics.js'
 
 export const ORG_ID = `${SITE.url}/#organization`
 
@@ -51,7 +52,7 @@ export default function Seo({ title, description, path = '/', schema = [], noind
   const full = title.includes('Digifier') ? title : `${title} | Digifier UK`
   const url = SITE.url + (path === '/' ? '/' : path)
   return (
-    <Helmet>
+    <Helmet onChangeClientState={(state) => trackPageView(state.title)}>
       <title>{full}</title>
       <meta name="description" content={description} />
       <link rel="canonical" href={url} />

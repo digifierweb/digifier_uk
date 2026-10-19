@@ -54,12 +54,14 @@ export function applyConsent(c) {
       s.src = `https://www.googletagmanager.com/gtag/js?id=${SITE.ga4Id}`
       document.head.appendChild(s)
       window.gtag('js', new Date())
-      window.gtag('config', SITE.ga4Id, { anonymize_ip: true })
+      // GA4 always truncates IPs, so no anonymize flag is needed.
+      window.gtag('config', SITE.ga4Id)
     } else if (gaLoaded) {
       window.gtag('consent', 'update', state)
     }
   }
   // Withdrawal: clear analytics cookies when consent is removed.
+  const withdrawn = !c.analytics && gaLoaded
   if (!c.analytics) {
     document.cookie.split(';').forEach((ck) => {
       const name = ck.split('=')[0].trim()
@@ -69,4 +71,6 @@ export function applyConsent(c) {
       }
     })
   }
+  // gtag can't be unloaded, so reload once to make sure nothing from GA keeps running.
+  if (withdrawn) location.reload()
 }

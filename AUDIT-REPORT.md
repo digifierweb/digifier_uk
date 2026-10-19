@@ -46,6 +46,20 @@ Rebuilt and re-checked in the local preview. axe-core now reports **0 violations
 
 Re-verified: axe-core finds **0 violations** on 8 pages (home, pricing, SEO, app development, contact, terms, accessibility, sitemap). No console errors. No horizontal scroll at 320 px.
 
+### Third round: sections 15–19 (20 Oct 2026)
+
+| # | Status | What changed |
+|---|---|---|
+| F21 | ✅ Resolved by you | Git repository with `.gitignore`, pushed to GitHub (`digifierweb/digifier_uk`). |
+| F22 | ⛔ Needs you | GA4 is still not installed (`ga4Id` empty), and Search Console isn't verified. Both need your Google account. |
+| F23 | ✅ Fixed | Consent-gated GA4 events in `src/lib/analytics.js`: `whatsapp_click` (area, CTA, service, package), `phone_click`, `email_click` and `generate_lead` (method, service, budget band). Tested with a fake GA4 ID (§16). |
+| F24 | ✅ Fixed | The blocked-popup fallback is now a button, not a link, so there's no URL containing the visitor's details for GA4's outbound-click tracking to record. Analytics parameters never include form contents or WhatsApp URLs (tested). |
+| F25 | ✅ Fixed | Each in-app navigation sends one `page_view` with the correct title, fired after the new page's title is applied. `anonymize_ip` (a no-op in GA4) removed. **GA4 setting needed:** turn off "Page changes based on browser history events" in the web stream's enhanced measurement, or views are double-counted. |
+| F26 | ✅ Fixed | Withdrawing analytics consent reloads the page once, so the GA script stops running, and cookies are cleared (tested). |
+| F27 | ✅ Fixed | First-touch `utm_source / medium / campaign` is read from the landing URL and kept in memory only (no cookie or storage). With analytics consent, it's added as a visible "Source:" line to the WhatsApp enquiry. |
+| F28 | ⚠️ Partly fixed | Added `.github/workflows/ci.yml` (on every push and pull request: build, high-severity `npm audit`, prerender check) and `.github/dependabot.yml` (monthly). Not pushed yet. Uptime monitoring and host deploy/rollback need a deployment. |
+| F30 | ⛔ Needs you | **The GitHub repo is public**: the GitHub API returns it without logging in. Public source code is fine (there are no secrets), but this report, which lists compliance gaps, and your commit email are visible to anyone. Make the repo private, or move the report out of it. |
+
 Still open, by your decision or needing your input:
 - **F1:** WhatsApp-only enquiries, by your choice.
 - **F2:** ICO registration number (pay the ICO data protection fee if you haven't already).
@@ -53,6 +67,9 @@ Still open, by your decision or needing your input:
 - **F6:** solicitor review of the terms.
 - **F11:** content for portfolio, case studies and blog.
 - **F17:** UK Instagram account and confirmed mailboxes.
+- **F22:** create GA4 and Search Console, set `ga4Id`, and change the GA4 setting noted under F25.
+- **F28:** push the CI files, connect hosting, add uptime checks.
+- **F30:** make the GitHub repo private.
 
 ## Findings (ranked)
 
@@ -78,15 +95,16 @@ Still open, by your decision or needing your input:
 | F18 | **P2** | Security | No `/.well-known/security.txt`. Security headers exist only in `public/_headers` and haven't been verified on a live host. | — | Add security.txt. After deployment, verify the headers with `curl -I` and securityheaders.com. |
 | F19 | **P2** | Performance | The JS bundle is 127 KB gzipped (React, Framer Motion, Router). Fonts total 270 KB across 10 subsets, of which only the latin subsets are normally fetched. | `dist/assets` | Lazy-load below-the-fold motion components. Use `LazyMotion` with `domAnimation` (saves about 25 KB). |
 | F20 | **P3** | SEO | Every sitemap entry uses the build date as `lastmod`. Service pages are fairly thin (about 400–800 words). Only the SEO and home pages have FAQs. | sitemap.xml, crawl. | Use real modified dates. Add FAQs, use cases and proof to each service page. |
-| F21 | **P0** | Operations | There's no version control or backup. The site source exists only in `D:\Claude\digifier-uk` on one PC, with no git repository, no remote copy and no `.gitignore`. A disk failure or accidental deletion would lose the source, and there is no history of changes. | `git rev-parse` → "not a git repository". | `git init`, add a `.gitignore` (`node_modules`, `dist`, `dist-server`), and push to a private GitHub repository. Then connect the host to it (see F28). |
-| F22 | **P1** | Analytics | No analytics is installed: `ga4Id` is empty, so nothing is measured. There's no Search Console verification either. | `src/data/site.js`. Zero requests after "Accept all". | Create a GA4 property and set `ga4Id`. Verify the domain in Search Console with a DNS TXT record at go-live and submit `sitemap.xml`. |
-| F23 | **P1** | Analytics | Even once GA4 is installed, no conversions would be recorded. There are no events for WhatsApp clicks (the main lead route), form submissions or call clicks. | No event code exists anywhere in `src`. | Add consent-gated events, e.g. `whatsapp_click {location, service, package}`, `form_submit {service, budget_band}` and `phone_click {location}`, and mark them as key events in GA4. Never send names, emails, phone numbers or message text. |
-| F24 | **P1** | Privacy | The WhatsApp hand-off URL contains the visitor's name, email, phone and message in `?text=`. If GA4's enhanced-measurement "outbound clicks" is left on (the default), clicking the form's fallback "Open WhatsApp" link would send that full URL, personal data included, to Google as `link_url`. | `ContactForm.jsx` fallback link → `wa.me/…?text=Name%3A…Email%3A…`. | When GA4 is enabled, turn off outbound-click enhanced measurement and use the custom events from F23, which carry no URL. Alternatively, strip `text=` before any analytics call. |
-| F25 | **P2** | Analytics | `gtag('config')` sends only the first page view. Later in-app navigations are counted only if GA4's "page changes based on browser history events" option is on, so page counts depend on a dashboard setting nobody has documented. `anonymize_ip` does nothing in GA4. | Offline test of `consent.js` (§16). | Send `page_view` on route change from the router, turn off the history option to avoid double counting, and remove `anonymize_ip`. |
-| F26 | **P2** | Privacy | After a visitor withdraws consent, the GA script stays loaded in "denied" mode for the rest of the visit and may send cookieless pings until the page is reloaded. | Offline test: step 6 sends `consent update denied`, but the script remains. | Reload the page after consent is withdrawn, so nothing from GA runs again. |
-| F27 | **P2** | Attribution | UTM parameters and referrers aren't captured, so a WhatsApp or form lead can't be traced to a campaign. There's also no CRM to join leads to their source (see F1). | Visit `/?utm_source=test` and submit: the source isn't in the message. | After analytics consent, keep first-touch `utm_*` values for the session and add a short source note to the pre-filled WhatsApp message and the form payload. |
-| F28 | **P2** | Operations | There's no CI/CD, automated checks, uptime or error monitoring, dependency-update process or documented deploy and rollback. | No `.github`, no host config, no monitoring. | Connect the host to the Git repo (preview deploys plus one-click rollback), turn on Dependabot, add a free uptime check on `/` and `/contact`, and run the build plus an axe check on every pull request. |
-| F29 | **P3** | Content workflow | There's no CMS. Content lives in `src/data/*.js` and the page files, so every change needs a developer, a rebuild and a redeploy. | — | This suits a 19-page brochure site, so treat it as intentional for now. Revisit when the blog and case studies (F11) begin. A Git-based CMS (Decap or TinaCMS) would then add roles, drafts, previews and history without a database. |
+| F21 | **P0** | Operations | (Resolved.) There was no version control or off-machine copy. | — | Done: Git plus GitHub. Keep pushing after every change; this is now the backup. |
+| F22 | **P1** | Analytics | GA4 isn't installed (`ga4Id` empty), and Search Console isn't verified. | `src/data/site.js` | Create a GA4 property and set `ga4Id`. Verify the domain with a DNS TXT record and submit `sitemap.xml`. |
+| F23 | **P1** | Analytics | There were no conversion events for WhatsApp, form, phone or email. | — | Fixed (third round). Mark `generate_lead` and `whatsapp_click` as key events in GA4. |
+| F24 | **P1** | Privacy | The form's fallback link put the visitor's name, email, phone and message in its URL. GA4's outbound-click tracking would have sent that URL to Google. | — | Fixed: a button instead of a link. |
+| F25 | **P2** | Analytics | Page views after the first depended on an undocumented GA4 setting. | — | Fixed in code; one GA4 setting is still needed (see the third round). |
+| F26 | **P2** | Privacy | The GA script stayed loaded after consent was withdrawn. | — | Fixed: the page reloads once. |
+| F27 | **P2** | Attribution | Leads couldn't be traced to a campaign. | — | Fixed: a source line in WhatsApp enquiries. A CRM (F1) would allow proper reporting. |
+| F28 | **P2** | Operations | No CI/CD, dependency updates, monitoring, or documented deploy and rollback. | — | CI and Dependabot added; push them. Connect the host to GitHub and add uptime checks. |
+| F29 | **P3** | Content workflow | No CMS: every content change needs a developer, a rebuild and a deploy. | — | Intentional for now (§15). Revisit with a Git-based CMS when the blog and case studies start. |
+| F30 | **P1** | Operations | The GitHub repo is public, exposing this report and the commit email. | The unauthenticated GitHub API returns the repo | Make it private: GitHub → Settings → General → Danger Zone. |
 
 ## 4. Core pages and functionality
 
@@ -246,103 +264,112 @@ Lighthouse flagged the logo link's accessible name for not containing its visibl
 
 ## 15. CMS and administration
 
-**There is no CMS, no admin area, no login and no user accounts.** All content is code: `src/data/site.js` (business details), `services.js` (services, packages, prices, FAQs), `content.js` (stats, testimonials, process, home FAQs) and the page components (copy, legal text). Publishing means editing a file, running `npm run build` and deploying `dist/`.
+**There is no CMS, no admin area, no login and no user accounts.** All content lives in code:
+- business details in `src/data/site.js`;
+- services and prices in `src/data/services.js`;
+- shared copy in `src/data/content.js`;
+- page text in `src/pages/*.jsx`.
+
+The README documents this as the editing workflow, so it looks intentional: a static brochure site with no server to attack. A developer can maintain it easily; a non-technical editor can't.
 
 | Item | Status | Notes |
 |---|---|---|
-| Content models | ⚠️ | Informal but consistent JS objects (service → packages → features/price). There's no schema validation, so a typo can break the build or show wrong prices |
-| Editorial roles, authentication, permissions | N/A | No editor interface exists. Anyone who can change the files or the hosting account can publish. **Access control is the hosting and Git account security (use 2FA).** The test "unauthorised editors cannot perform admin actions" can't be run because there are no editor accounts |
-| Draft/published states, previews | ⚠️ | Local `npm run dev` / `preview` only. With Git plus Cloudflare Pages or Netlify, every branch gets a preview URL |
-| Revision history, audit trail | ❌ | No version control (F21), so there's no record of who changed what |
-| Publication scheduling | ❌ | Not supported. Would need a scheduled build |
-| Media library | N/A | No content images. Icons and the logo are in `public/` and generated by `npm run assets` |
-| SEO fields | ✅ | Per page: `seoTitle`/`seoDescription` in data, canonical, OG and Twitter tags via `Seo.jsx` |
-| Redirect management | ⚠️ | No redirect file. Trailing-slash handling is left to the host (F10). Add `public/_redirects` when URLs change |
-| Structured data generation | ✅ | Generated from the same data as the visible content, so prices in schema always match the page |
-| Global content | ✅ | One config file for name, phone, WhatsApp, emails and company details |
-| Localisation | N/A | en-GB only, which is intentional |
-| Secure configuration changes | ⚠️ | No secrets exist. Config is public by design. Changes aren't reviewed (no pull requests) |
-| Content deletion | ⚠️ | Removing a service from `services.js` deletes its page and sitemap entry on the next build, with no redirect, so old links become 404s. Add a `_redirects` entry when retiring a page |
-
-**Verdict:** having no CMS is reasonable and appears intentional for a 19-page brochure site. It means a smaller attack surface, no admin to secure, no database and no licence cost. It is maintainable **for a developer**, but not for non-technical staff, and today it has no history or backup (F21). Revisit when blogs or case studies start (F29).
+| Content models | ⚠️ | Informal but consistent JS objects (service → packages → features and prices, add-ons, FAQs, process). There's no schema validation, so a typo shows up only at build time or on the page |
+| Editorial roles, authentication, permissions | N/A | There's no editor interface: whoever can push to GitHub and deploy can change the site. There's no admin surface to test for unauthorised actions. Public repo (F30) still means read-only for everyone else |
+| Draft and published states, previews | ⚠️ | Local `npm run dev` / `npm run preview` only. Once the host is connected to GitHub, every pull request gets a preview URL |
+| Revision history, audit trail | ✅ | Git history now exists (one commit so far). Commit each change separately |
+| Publication scheduling | ❌ | Not supported. It would need a scheduled build, which isn't worth it for this site |
+| Media library | N/A | No content images. The logo and icons are in `public/`, generated by `npm run assets` |
+| SEO fields | ✅ | Every page gets its title, description, canonical, OG and Twitter tags from data |
+| Redirect management | ⚠️ | No redirect file. Trailing slashes are handled by the `.html` output (F10). Add a `_redirects` file if URLs ever change |
+| Structured data generation | ✅ | Generated from the same data as the visible content, so schema and visible prices can't drift apart |
+| Global content | ✅ | One config file holds the name, phone, WhatsApp number, emails and company details |
+| Localisation | N/A | en-GB only, intentional |
+| Secure configuration changes | ✅ | There are no secrets, and all config is public by design. CI now builds every change before it can be deployed |
+| Content deletion | ⚠️ | Removing a service deletes its page and sitemap entry without a redirect, so old links 404. Add a redirect whenever you remove a page |
 
 ## 16. Analytics and measurement
 
-**Analytics is not working: it isn't installed (F22).** I didn't treat the GA code as evidence that tracking works. I ran the real `src/lib/consent.js` in Node with a fake browser and a test ID (`G-TEST123`), recording everything that would be sent. No network requests were made.
+**Analytics works in code but isn't running yet, because GA4 isn't installed (F22).** I didn't take the tracking script's presence as proof. Instead I built a test copy with a fake ID (`G-TEST000000`), blocked the real Google script in the browser, and recorded every gtag call. Nothing was sent to Google.
 
 | Step | What happened | Correct? |
 |---|---|---|
-| 1–2. First visit, no choice | No script, nothing in `dataLayer` | ✅ |
-| 3. Reject | Nothing loaded. Leftover `_ga*` cookies deleted | ✅ |
-| 4. Accept | `consent default` (analytics granted; ad_storage, ad_user_data and ad_personalization **denied**), then the gtag script loads, then `config` | ✅ Order is right and ad signals stay off |
-| 5. Accept again | `consent update` only; the script isn't loaded twice | ✅ |
-| 6. Withdraw | `consent update` denied, cookies deleted. **The script stays loaded** | ⚠️ F26 |
+| Landing with `?utm_source=newsletter…`, no cookie choice yet | No gtag, no script, no `dataLayer`, no cookies. A WhatsApp click sent nothing | ✅ |
+| Accept all | `consent default` (analytics granted; ad_storage, ad_user_data and ad_personalization denied), then the script loads, then `config` | ✅ |
+| Click header WhatsApp, a pricing card, footer phone and footer email | `whatsapp_click {link_area: header, cta: WhatsApp}`, `whatsapp_click {link_area: pricing_card, service: website-design, package: Starter}`, `phone_click {link_area: footer}`, `email_click {link_area: footer}` | ✅ |
+| Navigate Home → Pricing → Contact | One `page_view` per page, with the right title | ✅ (after I fixed a bug where it carried the previous page's title) |
+| Submit the form with test data | One `generate_lead {method: whatsapp_form, service: seo, budget_band: £250 – £500}`. The WhatsApp message ends with "Source: newsletter / email / oct-test" | ✅ |
+| Submit without ticking the consent box | Blocked with an error; no event | ✅ |
+| Popup blocked | No event until the visitor clicks "Open WhatsApp to send it" (a button, so the page holds no URL with their details). Then exactly one lead | ✅ |
+| Any personal data in analytics? | I searched every recorded call for the name, email, phone, message and `wa.me`. None found | ✅ |
+| Withdraw consent | The page reloads. No script and no `_ga` cookies; later clicks and navigations send nothing | ✅ |
 
 | Item | Status |
 |---|---|
-| Analytics installation / tag manager | ❌ GA4 is supported in code but has no ID. No GTM (not needed for this site) |
-| Consent integration | ✅ Tested above. ⚠️ F26 |
-| Page view accuracy | ⚠️ Only the first page is guaranteed (F25) |
-| Form submission, consultation, click-to-call and WhatsApp events | ❌ None exist (F23). "Consultation booking" isn't applicable: there's no booking system (F16) |
-| UTM attribution, conversion deduplication, CRM linkage | ❌ F27. No CRM (F1). Deduplication isn't applicable until events exist; when they do, fire `form_submit` once per success state, not per click |
-| Search Console | ❌ Not verified (F22) |
-| Privacy-safe parameters, exclusion of form contents | ⚠️ No custom parameters exist yet. **Risk:** personal data in WhatsApp URLs would leak via outbound-click tracking (F24) |
-| Error and uptime monitoring | ❌ None (F28) |
-| Reporting documentation | ❌ None. Once events exist, write down which event means which lead, and the GA4 settings chosen |
-
-The CSP in `public/_headers` already allows GA4's script and collection hosts, so turning it on needs no header change.
+| Analytics installation / tag manager | ⛔ No GA4 ID yet (F22). No GTM; this site doesn't need one |
+| Consent integration | ✅ Tested above |
+| Page view accuracy | ✅ In code. ⚠️ Turn off GA4's history-based page changes (F25) |
+| Form, click-to-call and WhatsApp events | ✅ Tested above |
+| Consultation booking events | N/A: there's no booking system (F16) |
+| UTM attribution | ✅ First touch, kept in memory only and visible in the enquiry (F27). GA4 also attributes the landing session itself |
+| Conversion deduplication | ✅ `generate_lead` fires once per successful hand-off, never per click and never on failure |
+| CRM linkage | ❌ No CRM (F1, your choice) |
+| Search Console | ⛔ F22 |
+| Privacy-safe parameters, form contents excluded | ✅ Tested above |
+| Error and uptime monitoring | ❌ F28 |
+| Reporting documentation | ⚠️ Event names and parameters are documented at the top of `src/lib/analytics.js` and in this section. Write a one-page GA4 guide once the property exists |
 
 ## 17. AI and automation
 
-**No AI features exist on the site.** There are no AI API calls, model SDKs, API keys, server functions or agents. The WhatsApp widget is a set of static links with pre-filled messages, and nothing is automated or sent on the visitor's behalf. The "AI Content Creation" and "AI Solutions" pages describe services sold to clients, not features of this website.
+**The site has no AI features.** There are no AI API calls, model SDKs, API keys, server functions or agents. The WhatsApp widget is static links with pre-filled text, and nothing is sent on the visitor's behalf. The "AI Content Creation" and "AI Solutions" pages describe services sold to clients, not features of the site.
 
-All checks in this section (API key handling, prompt injection, tool permissions, rate and cost limits, data retention and the rest) are **not applicable**. Nothing was added, as the brief requires. If an AI assistant is added later, minimum requirements before launch:
-- server-side keys only;
+So every check in this section (key handling, prompt injection, tool permissions, rate and cost limits, retention and the rest) is **not applicable**, and, as the brief requires, I didn't add any. If an AI assistant is added later, it needs at least the following before launch:
+- API keys kept server-side only;
 - no access to client records;
-- no tool that sends, publishes or books without human approval;
-- per-IP rate and spend limits;
-- a timeout and a fallback to WhatsApp;
-- disclosure in the privacy policy with the provider's retention terms;
-- conversation logs kept no longer than enquiries (12 months).
+- no tool that sends, publishes or books anything without human approval;
+- per-IP rate limits and a spend cap;
+- a timeout, with WhatsApp as the fallback;
+- disclosure in the privacy policy, including the provider's data-retention terms;
+- conversation logs kept no longer than enquiries.
 
 ## 18. Scalability and reliability
 
-**Architecture:** static prerendered HTML, CSS and JS served from a CDN. There's no server code, database, queue, background job or user data stored by the site.
+**Architecture:** prerendered static HTML, CSS and JS served from a CDN. There's no server code, database, queue or background job, and the site stores no user data.
 
 | Item | Status |
 |---|---|
-| Modular architecture | ✅ Data, components and pages are separated. One shared pricing-tabs component |
+| Modular architecture | ✅ Data, components and pages are separate, with shared pricing-tabs and analytics modules |
 | Database indexes, queries, connections | N/A (no database) |
-| Caching / invalidation | ✅ `/assets/*` immutable for 1 year, and safe because filenames are content-hashed. HTML uses the host's default revalidation. Each deploy changes the hashes, so a manual purge is not needed |
-| CDN behaviour | ⛔ To verify after deployment: cache hit headers, HTTP/2 or 3, Brotli |
+| Caching and invalidation | ✅ `/assets/*` is cached for a year as immutable. That's safe because filenames are content-hashed. HTML uses the host's default revalidation, so each deploy goes live at once without purging |
+| CDN behaviour | ⛔ To verify after deployment: cache headers, HTTP/2 or 3, compression |
 | Background jobs, retries, idempotency | N/A |
-| Error handling | ✅ Client side: form errors, blocked-popup fallback (F3), a custom 404 with a real 404 status (F10) |
+| Error handling | ✅ Form validation, the blocked-popup fallback, and a custom 404 page with a real 404 status |
 | Health checks, logging, monitoring | ❌ F28. A static site needs only uptime checks on `/` and `/contact` |
-| Rate limiting | N/A for static pages. Needed when a form backend arrives (F1) |
-| Storage and resource limits | ✅ `dist/` is about 2.0 MB, far within free-tier limits on Cloudflare Pages and Netlify |
-| Load testing | **Not performed.** There's no deployment and no authorised test environment. Scalability is **not proven**. The assumption is that CDN-served static files scale with the provider. The real bottleneck is how fast the team answers WhatsApp |
-| Backups, restore, RTO/RPO, disaster recovery | ❌ **None (F21).** Today the recovery point is "whatever is on this PC" and recovery time is unknown. With Git plus a host connected to it: recovery point = last push, recovery time = minutes (redeploy any commit). Write this down once set up |
+| Rate limiting | N/A for static pages; needed if a form backend is added (F1) |
+| Storage and resource limits | ✅ `dist/` is about 2.0 MB, far inside the free tiers of Cloudflare Pages and Netlify |
+| Load testing | **Not performed**: there's no deployment and no authorised test environment. Scalability is **not proven**. The assumption is that a CDN serving static files scales with the provider. The practical bottleneck is how fast the team answers WhatsApp |
+| Backups, restore, RTO/RPO, disaster recovery | ⚠️ The source is now on GitHub, so the recovery point is the last push. Once hosting is connected, recovery takes minutes (redeploy any commit). This isn't written down as a procedure yet. Enquiries live only in WhatsApp, so back up WhatsApp on the phone |
 
 ## 19. Integrations and operations
 
 | Integration | Status | Notes |
 |---|---|---|
-| CRM | ❌ | None (F1, by your choice) |
-| Email delivery | ⚠️ | No sending. `hello@` / `privacy@digifier.co.uk` are only `mailto:` links and still unconfirmed (F17). Set SPF, DKIM and DMARC on the domain |
-| Calendar booking | N/A | None. The CTA was renamed (F16) |
-| WhatsApp | ✅ | `wa.me/447867244213` links with context-specific pre-filled text, built in one function (`waLink`) |
-| Analytics / Search Console | ❌ | F22 |
+| CRM | ❌ | None (F1, your choice) |
+| Email delivery | ⚠️ | The site sends no email. `hello@` and `privacy@digifier.co.uk` are only `mailto:` links, and the mailboxes are still unconfirmed (F17). Set SPF, DKIM and DMARC on the domain |
+| Calendar booking | N/A | None; the CTA was renamed (F16) |
+| WhatsApp | ✅ | `wa.me/447867244213` links built in one function (`waLink`), with click tracking (§16) |
+| Analytics / Search Console | ⛔ | F22 |
 | CMS | N/A | §15 |
 | Payments | N/A | No online payments |
 | Webhooks, external APIs, scheduled jobs | N/A | None |
 | Error notifications | ❌ | F28 |
-| Environment variables | ✅ | None needed. No secrets in the code (checked). Config is in `site.js` |
-| CI/CD, deployment, rollback | ❌ | Manual build, no pipeline (F28). The README covers build and deploy steps and host checks. With Git-connected hosting, rollback is one click to a previous deploy |
-| DNS and TLS | ⛔ | Not documented yet. At go-live: point the apex domain and `www` to the host, choose one canonical (`digifier.co.uk`) and 301 the other, keep the host's automatic TLS, then confirm HSTS from `_headers` before submitting to the HSTS preload list |
-| Monitoring / backups | ❌ | F21, F28 |
-| Dependency updates | ⚠️ | Manual. Last check: 2 moderate react-router advisories (v7-only fix). Recommend Dependabot plus a monthly `npm audit --omit=dev` |
+| Environment variables | ✅ | None needed, and there are no secrets in the code (checked). `.env*` is gitignored anyway |
+| CI/CD | ⚠️ | CI workflow added (build, audit, prerender check) but not pushed yet. No deployment pipeline until hosting is connected |
+| Deployment and rollback | ⛔ | Not deployed. With Git-connected hosting, every push to `main` deploys, and rollback is one click to a previous deploy. The README covers build steps and post-deploy checks |
+| DNS and TLS | ⛔ | At go-live: point the apex domain and `www` at the host, make `digifier.co.uk` canonical and 301 `www` to it, keep the host's automatic TLS, and confirm the HSTS header from `_headers`. Only then consider HSTS preload |
+| Monitoring / backups | ⚠️ | GitHub is the source backup; no monitoring yet (F28) |
+| Dependency updates | ✅ | Dependabot runs monthly, and CI runs a high-severity audit on every change. Current state: 2 moderate react-router advisories, fixed only in v7 |
 
 ## Test data and safety
 
-All test enquiries used `TEST — Audit Bot` and `audit-test@example.invalid`. WhatsApp hand-offs were intercepted inside the page, so no message reached WhatsApp or any real person. No external systems were written to. One script (axe-core 4.10.2) was loaded from cdnjs into the local preview only.
-The analytics test in §16 ran `consent.js` offline in Node with a fake browser and a made-up ID (`G-TEST123`), so nothing was sent to Google. No load test was run, because there is no authorised test environment.
+All test enquiries used `TEST — Audit Bot` and `audit-test@example.invalid`. WhatsApp hand-offs were intercepted inside the page, so no message reached WhatsApp or any real person. No external systems were written to. One script (axe-core 4.10.2) was loaded from cdnjs into the local preview only. The analytics tests used a fake GA4 ID in a throwaway build, with Google's script blocked in the page, so nothing reached Google.

@@ -4,6 +4,7 @@ import { AnimatePresence, m } from 'framer-motion'
 import { CheckCircle2, Loader2 } from 'lucide-react'
 import { SERVICES } from '../data/services.js'
 import { SITE, waLink } from '../data/site.js'
+import { track, campaignNote } from '../lib/analytics.js'
 
 const empty = { name: '', email: '', phone: '', company: '', service: '', budget: '', message: '', consent: false, website: '' }
 
@@ -41,6 +42,16 @@ export default function ContactForm() {
   const [errors, setErrors] = useState({})
   const [status, setStatus] = useState('idle')
   const [waHref, setWaHref] = useState('')
+  const [leadParams, setLeadParams] = useState(null)
+  // A button rather than a link: the URL holds the visitor's details, and GA4's outbound-click
+  // tracking would otherwise record it. A click is a user gesture, so the popup is allowed.
+  const openBlocked = () => {
+    const win = window.open(waHref, '_blank')
+    if (win) win.opener = null
+    else window.location.href = waHref
+    track('generate_lead', leadParams)
+    setStatus('done')
+  }
   const set = (k) => (e) => setV({ ...v, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value })
   const aria = (k) => ({ 'aria-invalid': !!errors[k], 'aria-describedby': errors[k] ? `${k}-err` : undefined })
 
@@ -55,6 +66,8 @@ export default function ContactForm() {
     }
     setStatus('sending')
     const serviceTitle = SERVICES.find((s) => s.slug === v.service)?.title || 'Other'
+    // Only non-personal fields go to analytics; never name, email, phone or message.
+    const lead = { method: SITE.formEndpoint ? 'form' : 'whatsapp_form', service: v.service, budget_band: v.budget || 'not_given' }
     if (SITE.formEndpoint) {
       try {
         const r = await fetch(SITE.formEndpoint, {
@@ -63,6 +76,7 @@ export default function ContactForm() {
           body: JSON.stringify({ ...v, service: serviceTitle, consentText: 'Agreed to privacy policy', submittedAt: new Date().toISOString() }),
         })
         if (!r.ok) throw new Error()
+        track('generate_lead', lead)
         setStatus('done')
         setV(empty)
       } catch {
@@ -80,6 +94,7 @@ export default function ContactForm() {
       `Service: ${serviceTitle}`,
       v.budget && `Budget: ${v.budget}`,
       v.message && `Message: ${v.message}`,
+      campaignNote(),
     ]
       .filter(Boolean)
       .join('\n')
@@ -88,9 +103,11 @@ export default function ContactForm() {
     const win = window.open(href, '_blank')
     if (win) {
       win.opener = null
+      track('generate_lead', lead)
       setStatus('done')
     } else {
       setWaHref(href)
+      setLeadParams(lead)
       setStatus('blocked')
     }
   }
@@ -171,7 +188,7 @@ export default function ContactForm() {
               <div className="error" role="alert">
                 <p>
                   Your browser blocked WhatsApp from opening, so your enquiry has <strong>not</strong> been sent yet.{' '}
-                  <a href={waHref} target="_blank" rel="noopener noreferrer" onClick={() => setStatus('done')}>Open WhatsApp to send it</a>, or email{' '}
+                  <button type="button" className="link-btn" onClick={openBlocked}>Open WhatsApp to send it</button>, or email{' '}
                   <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.
                 </p>
               </div>

@@ -49,7 +49,7 @@ export function PricingCard({ pkg, service }) {
         ))}
       </ul>
       <div className="price-actions">
-        <a className={`btn ${pkg.popular ? 'btn-primary' : 'btn-outline'} btn-block`} href={waLink(msg)} target="_blank" rel="noopener noreferrer">
+        <a className={`btn ${pkg.popular ? 'btn-primary' : 'btn-outline'} btn-block`} href={waLink(msg)} target="_blank" rel="noopener noreferrer" data-cta="pricing_package" data-service={service.slug} data-package={pkg.name}>
           <WhatsAppIcon size={18} /> {price == null ? 'Request a quote' : 'Get started'}
         </a>
       </div>
