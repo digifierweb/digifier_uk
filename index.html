@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#07070d" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png" />
+    <link rel="preload" as="image" href="/logo-wordmark.webp" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <!--head-->
+    <noscript>
+      <style>
+        /* Without JS, show content that animations would reveal, list every pricing panel and hide controls that need JS. */
+        [style*='opacity:0'] { opacity: 1 !important; transform: none !important; }
+        [role='tabpanel'][hidden] { display: block !important; margin-bottom: 48px; }
+        [role='tabpanel'] .sr-only { position: static; width: auto; height: auto; margin: 0 0 20px; clip: auto; overflow: visible; text-align: center; }
+        [role='tablist'], .menu-btn, .rotator-ctrl, .motion-toggle { display: none !important; }
+      </style>
+    </noscript>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div id="root"><!--app--></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

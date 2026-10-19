@@ -1,0 +1,5 @@
+# Security contact for digifier.co.uk (RFC 9116). Review and renew before the Expires date.
+Contact: mailto:hello@digifier.co.uk
+Expires: 2027-10-19T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://digifier.co.uk/.well-known/security.txt
