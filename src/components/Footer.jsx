@@ -1,9 +1,9 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { m, useScroll, useTransform } from 'framer-motion'
-import { Mail, Phone, Clock, Instagram } from 'lucide-react'
+import { Mail, Phone, Clock, Instagram, Linkedin, Facebook, Twitter, Youtube, Music2 } from 'lucide-react'
 import { SERVICES } from '../data/services.js'
-import { SITE, waLink, companyLine } from '../data/site.js'
+import { SITE, SOCIAL_LINKS, waLink, companyLine } from '../data/site.js'
 import { openCookieSettings } from '../lib/consent.js'
 import { Logo } from './Header.jsx'
 import { WhatsAppIcon } from './Icons.jsx'
@@ -21,6 +21,8 @@ function FooterBig() {
   )
 }
 
+const SOCIAL_ICONS = { instagram: Instagram, linkedin: Linkedin, facebook: Facebook, x: Twitter, youtube: Youtube, tiktok: Music2 }
+
 export default function Footer() {
   return (
     <footer className="site-footer">
@@ -35,9 +37,14 @@ export default function Footer() {
               <a href={waLink()} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp Digifier">
                 <WhatsAppIcon size={20} />
               </a>
-              <a href={SITE.instagram} target="_blank" rel="noopener noreferrer" aria-label="Digifier on Instagram">
-                <Instagram size={20} />
-              </a>
+              {SOCIAL_LINKS.map(({ key, label, url }) => {
+                const Icon = SOCIAL_ICONS[key]
+                return (
+                  <a key={key} href={url} target="_blank" rel="noopener noreferrer" aria-label={`${SITE.name} on ${label}`}>
+                    <Icon size={20} />
+                  </a>
+                )
+              })}
               <a href={`mailto:${SITE.email}`} aria-label="Email Digifier">
                 <Mail size={20} />
               </a>
@@ -81,7 +88,14 @@ export default function Footer() {
           <p>
             © {new Date().getFullYear()} {companyLine()} All rights reserved.
           </p>
-          <p>Prices in GBP, including VAT. Part of the Digifier group — <a href="https://digifier.in" target="_blank" rel="noopener">digifier.in</a></p>
+          <p>
+            Prices in GBP, {SITE.pricesIncludeVat ? 'including' : 'excluding'} VAT.
+            {SITE.groupSiteUrl && (
+              <>
+                {' '}Part of the Digifier group — <a href={SITE.groupSiteUrl} target="_blank" rel="noopener">{SITE.groupSiteName}</a>
+              </>
+            )}
+          </p>
         </div>
       </div>
     </footer>

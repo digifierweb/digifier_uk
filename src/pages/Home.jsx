@@ -8,10 +8,10 @@ import { useMotionPaused } from '../lib/motion.js'
 import { SectionHead, PricingCard, PricingTabs, Faq, Marquee, Testimonials, CtaBand } from '../components/Blocks.jsx'
 import { ServiceIcon, WhatsAppIcon } from '../components/Icons.jsx'
 import { SERVICES } from '../data/services.js'
-import { STATS, WHY, PROCESS, HOME_FAQS, TESTIMONIALS } from '../data/content.js'
+import { HERO, STATS, WHY, PROCESS, HOME_FAQS, TESTIMONIALS } from '../data/content.js'
 import { SITE, waLink } from '../data/site.js'
 
-const WORDS = ['Design', 'Marketing', 'SEO', 'AI', 'Growth']
+const WORDS = HERO.rotatingWords
 
 function RotatingWord() {
   const [i, setI] = useState(0)
@@ -65,55 +65,61 @@ function Hero() {
       <m.div className="container hero-inner" style={{ opacity: fade }}>
         {/* Entrance is CSS (.enter / .word-rise) so it plays from first paint, before JavaScript loads. */}
         <p className="pill enter" style={{ '--d': '0ms' }}>
-          <span className="pill-dot" /> UK digital marketing &amp; web agency
+          <span className="pill-dot" /> {HERO.eyebrow}
         </p>
-        <h1 className="display" aria-label={`We help brands stand out with ${WORDS.join(', ')}`}>
-          <SplitWords text="We help brands stand out with" delay={0.08} labelled={false} instant />
+        <h1 className="display" aria-label={`${HERO.headline} ${WORDS.join(', ')}`}>
+          <SplitWords text={HERO.headline} delay={0.08} labelled={false} instant />
           <span className="enter-mask"><span className="enter-rise" style={{ '--d': '420ms' }}><RotatingWord /></span></span>
         </h1>
-        <p className="lead hero-lead enter" style={{ '--d': '520ms' }}>
-          Strategy-first design, marketing and technology for ambitious UK businesses. Websites from £150, marketing plans from
-          £150/month — all with transparent reporting.
-        </p>
-        <div className="btn-row enter" style={{ '--d': '620ms' }}>
-          <Magnetic>
-            <Link to="/contact" className="btn btn-primary btn-lg">
-              Get a free consultation <ArrowUpRight size={18} aria-hidden="true" />
-            </Link>
-          </Magnetic>
-          <Magnetic>
-            <a href={waLink()} className="btn btn-whatsapp btn-lg" target="_blank" rel="noopener noreferrer">
-              <WhatsAppIcon size={20} /> WhatsApp us
-            </a>
-          </Magnetic>
-        </div>
-        <div className="hero-proof enter" style={{ '--d': '760ms' }}>
-          <div className="avatars" aria-hidden="true">
-            {TESTIMONIALS.slice(0, 4).map((t) => (
-              <span key={t.name}>{t.name[0]}</span>
+        {/* Text column + chips column: the chips sit beside the copy, never over the headline. */}
+        <div className="hero-body">
+          <div className="hero-copy">
+            <p className="lead hero-lead enter" style={{ '--d': '520ms' }}>
+              {HERO.lead}
+            </p>
+            <div className="btn-row enter" style={{ '--d': '620ms' }}>
+              <Magnetic>
+                <Link to="/contact" className="btn btn-primary btn-lg">
+                  Get a free consultation <ArrowUpRight size={18} aria-hidden="true" />
+                </Link>
+              </Magnetic>
+              <Magnetic>
+                <a href={waLink()} className="btn btn-whatsapp btn-lg" target="_blank" rel="noopener noreferrer">
+                  <WhatsAppIcon size={20} /> WhatsApp us
+                </a>
+              </Magnetic>
+            </div>
+            <div className="hero-proof enter" style={{ '--d': '760ms' }}>
+              <div className="avatars" aria-hidden="true">
+                {TESTIMONIALS.slice(0, 4).map((t) => (
+                  <span key={t.name}>{t.name[0]}</span>
+                ))}
+              </div>
+              {(HERO.proofHighlight || HERO.proofText) && (
+                <p>
+                  <strong>{HERO.proofHighlight}</strong> {HERO.proofText}
+                </p>
+              )}
+              <MotionToggle className="hero-motion" />
+            </div>
+          </div>
+          <div className="hero-chips" aria-hidden="true">
+            {[
+              ['chip-1', '900ms', [0, -10, 0], 5, <><TrendingUp size={18} /> <span><strong>SEO-first</strong> builds</span></>],
+              ['chip-2', '1020ms', [0, 12, 0], 6, <><Zap size={18} /> <span><strong>5–7 day</strong> launches</span></>],
+              ['chip-3', '1140ms', [0, -8, 0], 4.5, <><ShieldCheck size={18} /> <span>UK GDPR ready</span></>],
+            ].map(([cls, d, ys, duration, body]) => (
+              // Outer: CSS entrance. Inner: Framer's gentle float (pausable). Separate elements so the transforms don't fight.
+              <div key={cls} className="enter enter-x" style={{ '--d': d }}>
+                <m.div className={`chip ${cls}`} animate={float(ys)} transition={{ y: { repeat: Infinity, duration, ease: 'easeInOut' } }}>
+                  {body}
+                </m.div>
+              </div>
             ))}
           </div>
-          <p>
-            <strong>4.9★</strong> from 50+ happy clients
-          </p>
-          <MotionToggle className="hero-motion" />
         </div>
       </m.div>
 
-      <div className="hero-chips" aria-hidden="true">
-        {[
-          ['chip-1', '900ms', [0, -10, 0], 5, <><TrendingUp size={18} /> <span><strong>SEO-first</strong> builds</span></>],
-          ['chip-2', '1020ms', [0, 12, 0], 6, <><Zap size={18} /> <span><strong>5–7 day</strong> launches</span></>],
-          ['chip-3', '1140ms', [0, -8, 0], 4.5, <><ShieldCheck size={18} /> <span>UK GDPR ready</span></>],
-        ].map(([cls, d, ys, duration, body]) => (
-          // Outer: CSS entrance. Inner: Framer's gentle float (pausable). Separate elements so the transforms don't fight.
-          <div key={cls} className="enter enter-x" style={{ '--d': d }}>
-            <m.div className={`chip ${cls}`} animate={float(ys)} transition={{ y: { repeat: Infinity, duration, ease: 'easeInOut' } }}>
-              {body}
-            </m.div>
-          </div>
-        ))}
-      </div>
     </section>
   )
 }

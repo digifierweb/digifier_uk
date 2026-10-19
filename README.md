@@ -14,7 +14,11 @@ npm run assets     # regenerate icons + og.png from the digifier.in logo (script
 
 Deploy the `dist/` folder to Cloudflare Pages or Netlify. Pages are built as `/pricing.html` etc., which both hosts serve at `/pricing` (and redirect `/pricing/` to it); `404.html` is served with a 404 status. After deploying, check with `curl -I https://digifier.co.uk/pricing/` (expect a redirect) and `curl -I https://digifier.co.uk/nope` (expect 404). `public/_headers` sets security headers on Netlify and Cloudflare.
 
-## Before going live: fill these in (`src/data/site.js`)
+## Admin panel
+
+Content and settings are edited at **`/admin/`** (Sveltia CMS). It saves to `src/content/*.json` in GitHub, and CI validates every change. See [ADMIN.md](ADMIN.md) for sign-in, roles and the publishing workflow. `npm run validate` runs the content check on its own.
+
+## Before going live: fill these in (admin → Site settings, or `src/content/settings.json`)
 
 - `companyNumber`, `registeredIn`, `registeredAddress`, `icoNumber` (empty values are left off the site) (needed for UK GDPR and the Companies Act; shown in the footer and privacy policy)
 - `email` / `privacyEmail` (confirm the mailboxes exist)
@@ -23,7 +27,7 @@ Deploy the `dist/` folder to Cloudflare Pages or Netlify. Pages are built as `/p
 
 ## Pricing
 
-All prices are fixed GBP round figures in `src/data/services.js` (`price` on each package and add-on; `price: null` means quote-based). Edit the numbers there and rebuild. If you change a starting price, also update that service's `seoTitle`/`seoDescription` and the hero line in `src/pages/Home.jsx`.
+All prices are fixed GBP round figures, edited in the admin under **Services & pricing** (stored in `src/content/services.json`). Each package and add-on has a `price`; an empty price means quote-based. If you change a starting price, also update that service's SEO title and description, and the homepage intro paragraph if it quotes the price.
 
 ## WhatsApp
 

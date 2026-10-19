@@ -4,7 +4,7 @@ import { PageHero } from '../components/Blocks.jsx'
 import { SITE, companyLine } from '../data/site.js'
 import { openCookieSettings } from '../lib/consent.js'
 
-const UPDATED = '19 October 2026'
+const UPDATED = SITE.legalUpdated
 
 function LegalPage({ title, description, path, children }) {
   return (
@@ -164,7 +164,7 @@ export function Terms() {
     >
       <p>These terms apply to services provided by {SITE.legalName}. Each project is also governed by its written proposal or statement of work, which takes priority if there is any conflict.</p>
       <h2>1. Quotes &amp; pricing</h2>
-      <p>All prices are in pounds sterling (GBP). Package prices on this website are guide prices and include VAT; your written quote confirms the final price, scope and timeline.</p>
+      <p>All prices are in pounds sterling (GBP). Package prices on this website are guide prices and {SITE.pricesIncludeVat ? 'include' : 'exclude'} VAT; your written quote confirms the final price, scope and timeline.</p>
       <h2>2. Payment</h2>
       <p>One-off projects are normally invoiced 50% on acceptance and 50% before launch. Monthly retainers are billed in advance. Invoices are payable within 14 days.</p>
       <h2>3. Third-party costs</h2>

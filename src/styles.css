@@ -162,7 +162,9 @@ input, select, textarea { font: inherit; color: inherit; }
 .avatars span:nth-child(2) { background: linear-gradient(120deg, #0ea5e9, #8b5cf6); }
 .avatars span:nth-child(3) { background: linear-gradient(120deg, #f59e0b, #ec4899); }
 .avatars span:nth-child(4) { background: linear-gradient(120deg, #22c55e, #0ea5e9); }
-.hero-chips { position: absolute; right: max(24px, calc((100vw - var(--container)) / 2 + 24px)); top: 50%; transform: translateY(-50%); display: grid; gap: 18px; z-index: 2; }
+.hero-body { display: grid; gap: 40px; align-items: center; }
+@media (min-width: 1101px) { .hero-body { grid-template-columns: minmax(0, 1fr) auto; } }
+.hero-chips { display: grid; gap: 18px; justify-items: end; }
 .chip { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 16px; background: rgba(18, 18, 30, 0.7); border: 1px solid var(--line-2); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: var(--shadow); font-size: 0.92rem; color: var(--muted); }
 .chip svg { color: var(--lime); }
 .chip strong { color: var(--text); }
@@ -363,7 +365,7 @@ a.contact-card:hover { border-color: var(--primary-2); }
 .error { margin: 0; font-size: 0.86rem; color: var(--danger); }
 .consent { display: grid; grid-template-columns: 22px 1fr; gap: 12px; align-items: start; font-size: 0.9rem; color: var(--muted); padding: 16px; border-radius: 12px; border: 1px solid var(--line); }
 .consent.has-error { border-color: var(--danger); }
-.consent input { width: 22px; height: 22px; margin: 2px 0 0; accent-color: var(--primary); cursor: pointer; }
+.consent input { width: 24px; height: 24px; margin: 1px 0 0; flex-shrink: 0; accent-color: var(--primary); cursor: pointer; }
 .consent a { color: var(--primary-2); text-decoration: underline; }
 .hp { position: absolute; left: -9999px; height: 0; overflow: hidden; }
 .form-success { text-align: center; display: grid; justify-items: center; gap: 14px; padding: 40px 10px; }
@@ -387,7 +389,7 @@ a.contact-card:hover { border-color: var(--primary-2); }
 .footer-contact svg { flex-shrink: 0; color: var(--lime); }
 .footer-bottom { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--line); font-size: 0.85rem; color: var(--muted); position: relative; }
 .footer-bottom p { margin: 0; }
-.footer-bottom a { text-decoration: underline; }
+.footer-bottom a { text-decoration: underline; display: inline-block; padding: 4px 0; }
 
 /* WhatsApp widget */
 .wa { position: fixed; right: 20px; bottom: 20px; z-index: 90; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }

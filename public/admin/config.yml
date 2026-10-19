@@ -1,0 +1,287 @@
+# Digifier UK admin panel (Sveltia CMS, Decap-compatible config).
+# Every save is a commit to GitHub. CI then builds the site and runs scripts/validate-content.mjs,
+# and the host redeploys from main. Sign in with a GitHub account that has write access to the repo.
+
+backend:
+  name: github
+  repo: digifierweb/digifier_uk
+  branch: main
+  commit_messages:
+    update: 'Content: update {{collection}} ({{slug}}) via admin'
+
+site_url: https://digifier.co.uk
+display_url: https://digifier.co.uk
+logo:
+  src: /favicon-48.png
+
+# No image fields yet; uploads would land here if added later.
+media_folder: public/uploads
+public_folder: /uploads
+
+collections:
+  # ---------------------------------------------------------------- Settings
+  - name: settings
+    label: Site settings
+    icon: settings
+    format: json
+    editor: { preview: false }
+    files:
+      - name: settings
+        label: Business, contact & integrations
+        file: src/content/settings.json
+        fields:
+          - name: business
+            label: Business & legal
+            widget: object
+            collapsed: false
+            fields:
+              - { name: name, label: Brand name, widget: string, hint: 'Short brand name used in page titles and the footer, e.g. "Digifier".' }
+              - { name: siteName, label: Site name, widget: string, hint: 'Appended to page titles and used for social previews, e.g. "Digifier UK".' }
+              - { name: legalName, label: Registered company name, widget: string, hint: 'Exactly as at Companies House, e.g. "Digifier Consulting Limited".' }
+              - name: companyNumber
+                label: Company number
+                widget: string
+                required: false
+                pattern: ['^([0-9]{8}|[A-Z]{2}[0-9]{6})?$', 'Use the 8-character Companies House number, e.g. 15014916 or SC123456']
+                hint: 'Required on company websites (Companies Act 2006). Leave empty to hide.'
+              - name: registeredIn
+                label: Place of registration
+                widget: select
+                required: false
+                options: ['England & Wales', 'Scotland', 'Northern Ireland']
+              - { name: registeredAddress, label: Registered office address, widget: string, required: false }
+              - name: icoNumber
+                label: ICO registration number
+                widget: string
+                required: false
+                pattern: ['^([A-Z0-9]{8})?$', 'ICO references are 8 characters, e.g. ZB123456']
+                hint: 'Shown in the privacy policy once you have paid the ICO data protection fee.'
+              - name: url
+                label: Website address
+                widget: string
+                pattern: ['^https://[^/\s]+$', 'Use https:// and no trailing slash, e.g. https://digifier.co.uk']
+                hint: 'Used for canonical links, the sitemap and structured data.'
+              - { name: tagline, label: Tagline, widget: text, hint: 'Shown in the footer.' }
+              - name: pricesIncludeVat
+                label: Prices include VAT
+                widget: boolean
+                default: true
+                hint: 'On: prices are labelled "inc. VAT" (required when selling to consumers). Off: "+ VAT".'
+              - { name: groupSiteName, label: Group website label, widget: string, required: false }
+              - name: groupSiteUrl
+                label: Group website link
+                widget: string
+                required: false
+                pattern: ['^(https://.+)?$', 'Must start with https://']
+                hint: 'Footer "Part of the Digifier group" link. Leave empty to hide.'
+          - name: contact
+            label: Contact details
+            widget: object
+            collapsed: false
+            fields:
+              - name: email
+                label: Enquiries email
+                widget: string
+                pattern: ['^[^@\s]+@[^@\s]+\.[^@\s]+$', 'Enter a valid email address']
+              - name: privacyEmail
+                label: Privacy / data-protection email
+                widget: string
+                pattern: ['^[^@\s]+@[^@\s]+\.[^@\s]+$', 'Enter a valid email address']
+              - { name: phoneDisplay, label: Phone (as displayed), widget: string, hint: 'e.g. +44 7867 244213' }
+              - name: phoneE164
+                label: Phone (for click-to-call)
+                widget: string
+                pattern: ['^\+[1-9][0-9]{7,14}$', 'International format with no spaces, e.g. +447867244213']
+              - name: whatsapp
+                label: WhatsApp number
+                widget: string
+                pattern: ['^[1-9][0-9]{7,14}$', 'Digits only with country code and no +, e.g. 447867244213']
+                hint: 'Used by every WhatsApp button, the chat widget and the contact form hand-off.'
+              - { name: whatsappDefaultMessage, label: Default WhatsApp message, widget: string, hint: 'Pre-filled text for general WhatsApp buttons.' }
+              - { name: hours, label: Opening hours, widget: string, hint: 'e.g. Mon–Fri, 9:00–18:00 (UK time)' }
+          - name: social
+            label: Social profiles
+            widget: object
+            hint: 'Leave a field empty to hide that icon. Profiles also appear in structured data for search engines.'
+            fields:
+              - { name: instagram, label: Instagram, widget: string, required: false, pattern: ['^(https://.+)?$', 'Must start with https://'] }
+              - { name: linkedin, label: LinkedIn, widget: string, required: false, pattern: ['^(https://.+)?$', 'Must start with https://'] }
+              - { name: facebook, label: Facebook, widget: string, required: false, pattern: ['^(https://.+)?$', 'Must start with https://'] }
+              - { name: x, label: X (Twitter), widget: string, required: false, pattern: ['^(https://.+)?$', 'Must start with https://'] }
+              - { name: youtube, label: YouTube, widget: string, required: false, pattern: ['^(https://.+)?$', 'Must start with https://'] }
+              - { name: tiktok, label: TikTok, widget: string, required: false, pattern: ['^(https://.+)?$', 'Must start with https://'] }
+          - name: integrations
+            label: Integrations
+            widget: object
+            fields:
+              - name: ga4Id
+                label: Google Analytics 4 measurement ID
+                widget: string
+                required: false
+                pattern: ['^(G-[A-Z0-9]{6,12})?$', 'Looks like G-XXXXXXXXXX']
+                hint: 'Loads only after a visitor accepts analytics cookies. In GA4, turn off "Page changes based on browser history events" to avoid double-counting.'
+              - name: formEndpoint
+                label: Contact form endpoint
+                widget: string
+                required: false
+                pattern: ['^(https://.+)?$', 'Must start with https://']
+                hint: 'e.g. a Formspree URL. Leave empty to keep sending enquiries to WhatsApp. If you use a new service, its domain must also be added to the Content-Security-Policy in public/_headers.'
+          - name: legal
+            label: Legal pages
+            widget: object
+            fields:
+              - { name: lastUpdated, label: Policies last updated, widget: string, hint: 'Shown on the privacy, cookie, terms and accessibility pages, e.g. 19 October 2026. Update it whenever those pages change.' }
+
+  # ---------------------------------------------------------------- Homepage
+  - name: home
+    label: Homepage
+    icon: home
+    format: json
+    editor: { preview: false }
+    files:
+      - name: home
+        label: Homepage content
+        file: src/content/home.json
+        fields:
+          - name: hero
+            label: Hero
+            widget: object
+            collapsed: false
+            fields:
+              - { name: eyebrow, label: Small label above the headline, widget: string }
+              - { name: headline, label: Headline (before the rotating word), widget: string }
+              - { name: rotatingWords, label: Rotating words, widget: list, min: 1, max: 8, field: { name: word, label: Word, widget: string } }
+              - { name: lead, label: Intro paragraph, widget: text }
+              - { name: proofHighlight, label: Proof highlight, widget: string, required: false, hint: 'e.g. 4.9★. Only use figures you can evidence (consumer law). Leave both proof fields empty to hide.' }
+              - { name: proofText, label: Proof text, widget: string, required: false }
+          - name: stats
+            label: Stats band
+            widget: list
+            summary: '{{fields.value}}{{fields.suffix}} {{fields.label}}'
+            hint: 'Shown on the homepage and About page. Only publish figures you can evidence.'
+            fields:
+              - { name: value, label: Number, widget: number, value_type: float, min: 0 }
+              - { name: suffix, label: Suffix, widget: string, required: false, hint: 'e.g. +, %, ★' }
+              - { name: label, label: Label, widget: string }
+              - { name: decimals, label: Decimal places, widget: number, value_type: int, min: 0, max: 2, required: false }
+          - name: testimonials
+            label: Testimonials
+            widget: list
+            summary: '{{fields.name}}'
+            hint: 'Real clients only, with their permission.'
+            fields:
+              - { name: name, label: Client name, widget: string }
+              - { name: quote, label: Quote, widget: text }
+          - name: why
+            label: Why choose us
+            widget: list
+            summary: '{{fields.title}}'
+            fields:
+              - { name: title, label: Title, widget: string }
+              - { name: text, label: Text, widget: text }
+          - name: process
+            label: How we work (also the default on service pages)
+            widget: list
+            summary: '{{fields.title}}'
+            fields:
+              - { name: title, label: Step, widget: string }
+              - { name: time, label: Timing, widget: string, hint: 'e.g. 1 week' }
+              - { name: text, label: Description, widget: text }
+          - name: faqs
+            label: Homepage FAQs
+            widget: list
+            summary: '{{fields.question}}'
+            fields:
+              - { name: question, label: Question, widget: string }
+              - { name: answer, label: Answer, widget: text }
+
+  # ---------------------------------------------------------------- Services
+  - name: services
+    label: Services & pricing
+    icon: sell
+    format: json
+    editor: { preview: false }
+    files:
+      - name: services
+        label: All services
+        file: src/content/services.json
+        fields:
+          - name: services
+            label: Services
+            widget: list
+            summary: '{{fields.title}}'
+            hint: 'Order here is the order on the site. Removing a service deletes its page; add a redirect if it was ever published.'
+            fields:
+              - name: slug
+                label: URL slug
+                widget: string
+                pattern: ['^[a-z0-9]+(-[a-z0-9]+)*$', 'Lowercase letters, numbers and hyphens only']
+                hint: 'The page lives at /services/<slug>. Changing it breaks existing links.'
+              - name: icon
+                label: Icon
+                widget: select
+                options: [Sparkles, PenTool, ShoppingBag, RefreshCw, Megaphone, Search, Building2, Smartphone, Store]
+              - { name: title, label: Service name, widget: string }
+              - { name: short, label: Short description (cards), widget: text }
+              - { name: intro, label: Page introduction, widget: text }
+              - { name: features, label: Key features, widget: list, field: { name: feature, label: Feature, widget: string } }
+              - { name: benefits, label: Benefits (optional), widget: list, required: false, field: { name: benefit, label: Benefit, widget: string } }
+              - name: process
+                label: Delivery steps (optional)
+                widget: list
+                required: false
+                hint: 'Leave empty to use the homepage "How we work" steps.'
+                summary: '{{fields.title}}'
+                fields:
+                  - { name: title, label: Step, widget: string }
+                  - { name: text, label: Description, widget: text }
+              - name: packagesFrom
+                label: Reuse packages from another service
+                widget: select
+                required: false
+                options: [ai-solutions, website-design, ecommerce, website-rebuilding, digital-marketing, seo, commercial-software, app-development, marketplace-services]
+                hint: 'Optional. If set, this service shows that service''s packages and add-ons instead of its own.'
+              - name: packages
+                label: Packages
+                widget: list
+                required: false
+                summary: '{{fields.name}} — £{{fields.price}}{{fields.per}}'
+                fields:
+                  - { name: name, label: Package name, widget: string }
+                  - { name: price, label: Price (£), widget: number, value_type: int, min: 0, required: false, hint: 'Whole pounds. Leave empty for "Custom quote".' }
+                  - { name: from, label: Show "from" before the price, widget: boolean, default: false }
+                  - { name: per, label: Price suffix, widget: string, required: false, hint: 'e.g. /month, /page. Leave empty for one-off prices.' }
+                  - { name: popular, label: Mark as most popular, widget: boolean, default: false, hint: 'Use on one package per service.' }
+                  - { name: blurb, label: Short description, widget: text }
+                  - { name: features, label: What's included, widget: list, field: { name: feature, label: Item, widget: string } }
+              - name: addons
+                label: Add-ons
+                widget: list
+                required: false
+                summary: '{{fields.name}} — £{{fields.price}}{{fields.per}}'
+                fields:
+                  - { name: name, label: Add-on, widget: string }
+                  - { name: price, label: Price (£), widget: number, value_type: int, min: 0 }
+                  - { name: from, label: Show "from", widget: boolean, default: false }
+                  - { name: per, label: Price suffix, widget: string, required: false }
+              - name: fromPrice
+                label: Starting price (services without packages)
+                widget: object
+                required: false
+                hint: 'For quote-based services such as SEO. The FAQ placeholders {from} and {to} use these numbers.'
+                fields:
+                  - { name: price, label: From (£), widget: number, value_type: int, min: 0 }
+                  - { name: per, label: Suffix, widget: string, required: false, hint: 'e.g. /month' }
+                  - { name: upTo, label: Typical maximum (£), widget: number, value_type: int, min: 0, required: false }
+              - name: faqs
+                label: FAQs (optional)
+                widget: list
+                required: false
+                hint: 'Leave empty to generate FAQs from the packages automatically.'
+                summary: '{{fields.question}}'
+                fields:
+                  - { name: question, label: Question, widget: string }
+                  - { name: answer, label: Answer, widget: text }
+              - { name: note, label: Pricing note (optional), widget: string, required: false }
+              - { name: seoTitle, label: SEO title, widget: string, hint: 'Aim for under 60 characters. "| Digifier UK" is added automatically.' }
+              - { name: seoDescription, label: SEO description, widget: text, hint: 'Aim for 120–160 characters.' }

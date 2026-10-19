@@ -7,7 +7,9 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const dist = path.join(root, 'dist')
 const template = fs.readFileSync(path.join(dist, 'index.html'), 'utf-8')
 const { render, ROUTES } = await import(pathToFileURL(path.join(root, 'dist-server', 'entry-server.js')).href)
-const { SITE } = await import(pathToFileURL(path.join(root, 'src', 'data', 'site.js')).href)
+// Read settings directly: plain Node can't import JSON through site.js the way Vite does.
+const settings = JSON.parse(fs.readFileSync(path.join(root, 'src', 'content', 'settings.json'), 'utf-8'))
+const SITE = { url: settings.business.url.replace(/\/+$/, '') }
 
 for (const url of ROUTES) {
   const { html, helmet } = render(url)

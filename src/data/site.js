@@ -1,26 +1,49 @@
-// Central business config — edit here, everything else reads from it.
+// Business settings live in src/content/settings.json, which the admin panel (/admin) edits.
+// This module keeps the flat SITE shape the rest of the code uses.
+import settings from '../content/settings.json'
+
+const { business: b, contact: c, social, integrations, legal } = settings
+
 export const SITE = {
-  name: 'Digifier',
-  legalName: 'Digifier Consulting Limited', // as registered at Companies House
-  // From Companies House (company 15014916). Empty values are left off the site rather than shown as placeholders.
-  companyNumber: '15014916',
-  registeredIn: 'England & Wales',
-  registeredAddress: '11 Hadleigh Rise, Caversham, Reading, RG4 6RW, United Kingdom',
-  icoNumber: '', // TODO: ICO data protection fee reference
-  url: 'https://digifier.co.uk',
-  email: 'hello@digifier.co.uk', // TODO: confirm mailbox
-  privacyEmail: 'privacy@digifier.co.uk', // TODO: confirm mailbox
-  phoneDisplay: '+44 7867 244213',
-  phoneE164: '+447867244213',
-  whatsapp: '447867244213',
-  hours: 'Mon–Fri, 9:00–18:00 (UK time)',
-  instagram: 'https://www.instagram.com/digifier_in/',
-  tagline: 'Creativity meets performance to power digital growth.',
-  // Optional: GA4 Measurement ID. Only loaded after the visitor grants analytics consent.
-  ga4Id: '',
-  // Optional: form endpoint (e.g. Formspree/Basin). If empty, the contact form hands off to WhatsApp.
-  formEndpoint: '',
+  name: b.name,
+  siteName: b.siteName,
+  legalName: b.legalName,
+  companyNumber: b.companyNumber,
+  registeredIn: b.registeredIn,
+  registeredAddress: b.registeredAddress,
+  icoNumber: b.icoNumber,
+  url: b.url.replace(/\/+$/, ''),
+  tagline: b.tagline,
+  pricesIncludeVat: b.pricesIncludeVat,
+  groupSiteName: b.groupSiteName,
+  groupSiteUrl: b.groupSiteUrl,
+  email: c.email,
+  privacyEmail: c.privacyEmail,
+  phoneDisplay: c.phoneDisplay,
+  phoneE164: c.phoneE164,
+  whatsapp: c.whatsapp,
+  whatsappDefaultMessage: c.whatsappDefaultMessage,
+  hours: c.hours,
+  social,
+  instagram: social.instagram,
+  // GA4 only loads after the visitor accepts analytics cookies.
+  ga4Id: integrations.ga4Id,
+  // If empty, the contact form hands the enquiry to WhatsApp.
+  formEndpoint: integrations.formEndpoint,
+  legalUpdated: legal.lastUpdated,
 }
+
+// Non-empty social profile URLs, in display order.
+export const SOCIAL_LINKS = [
+  ['instagram', 'Instagram'],
+  ['linkedin', 'LinkedIn'],
+  ['facebook', 'Facebook'],
+  ['x', 'X'],
+  ['youtube', 'YouTube'],
+  ['tiktok', 'TikTok'],
+]
+  .filter(([key]) => social[key])
+  .map(([key, label]) => ({ key, label, url: social[key] }))
 
 // "Digifier Consulting Limited, registered in England & Wales, company number 123. Registered office: …" with missing parts left out.
 export function companyLine() {
@@ -32,11 +55,11 @@ export function companyLine() {
   return line
 }
 
-// All prices include VAT (the company is VAT-registered and prices are shown VAT-inclusive for consumers).
-export const VAT_LABEL = 'inc. VAT'
+// Prices are shown VAT-inclusive (required when selling to consumers) unless switched off in settings.
+export const VAT_LABEL = SITE.pricesIncludeVat ? 'inc. VAT' : '+ VAT'
 
 export const fmt = (n) => '£' + n.toLocaleString('en-GB')
 
-export function waLink(message = "Hi Digifier, I'd like to talk about a project.") {
+export function waLink(message = SITE.whatsappDefaultMessage) {
   return `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(message)}`
 }

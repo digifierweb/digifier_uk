@@ -1,0 +1,40 @@
+{
+  "business": {
+    "name": "Digifier",
+    "siteName": "Digifier UK",
+    "legalName": "Digifier Consulting Limited",
+    "companyNumber": "15014916",
+    "registeredIn": "England & Wales",
+    "registeredAddress": "11 Hadleigh Rise, Caversham, Reading, RG4 6RW, United Kingdom",
+    "icoNumber": "",
+    "url": "https://digifier.co.uk",
+    "tagline": "Creativity meets performance to power digital growth.",
+    "pricesIncludeVat": true,
+    "groupSiteName": "digifier.in",
+    "groupSiteUrl": "https://digifier.in"
+  },
+  "contact": {
+    "email": "hello@digifier.co.uk",
+    "privacyEmail": "privacy@digifier.co.uk",
+    "phoneDisplay": "+44 7867 244213",
+    "phoneE164": "+447867244213",
+    "whatsapp": "447867244213",
+    "whatsappDefaultMessage": "Hi Digifier, I'd like to talk about a project.",
+    "hours": "Mon–Fri, 9:00–18:00 (UK time)"
+  },
+  "social": {
+    "instagram": "https://www.instagram.com/digifier_in/",
+    "linkedin": "",
+    "facebook": "",
+    "x": "",
+    "youtube": "",
+    "tiktok": ""
+  },
+  "integrations": {
+    "ga4Id": "",
+    "formEndpoint": ""
+  },
+  "legal": {
+    "lastUpdated": "19 October 2026"
+  }
+}

@@ -1,5 +1,5 @@
 import { Helmet } from 'react-helmet-async'
-import { SITE } from '../data/site.js'
+import { SITE, SOCIAL_LINKS } from '../data/site.js'
 import { trackPageView } from '../lib/analytics.js'
 
 export const ORG_ID = `${SITE.url}/#organization`
@@ -9,7 +9,7 @@ export const orgSchema = {
   '@type': 'ProfessionalService',
   '@id': ORG_ID,
   name: SITE.name,
-  alternateName: 'Digifier UK',
+  alternateName: SITE.siteName,
   legalName: SITE.legalName,
   url: SITE.url,
   logo: `${SITE.url}/logo.png`,
@@ -21,7 +21,7 @@ export const orgSchema = {
   areaServed: { '@type': 'Country', name: 'United Kingdom' },
   priceRange: '££',
   currenciesAccepted: 'GBP',
-  sameAs: [SITE.instagram, 'https://digifier.in'],
+  sameAs: [...SOCIAL_LINKS.map((l) => l.url), SITE.groupSiteUrl].filter(Boolean),
   contactPoint: {
     '@type': 'ContactPoint',
     telephone: SITE.phoneE164,
@@ -49,7 +49,7 @@ export const faqSchema = (faqs) => ({
 })
 
 export default function Seo({ title, description, path = '/', schema = [], noindex = false, type = 'website' }) {
-  const full = title.includes('Digifier') ? title : `${title} | Digifier UK`
+  const full = title.includes(SITE.name) ? title : `${title} | ${SITE.siteName}`
   const url = SITE.url + (path === '/' ? '/' : path)
   return (
     <Helmet onChangeClientState={(state) => trackPageView(state.title)}>
@@ -60,7 +60,7 @@ export default function Seo({ title, description, path = '/', schema = [], noind
       <link rel="alternate" hrefLang="x-default" href={url} />
       {noindex && <meta name="robots" content="noindex, follow" />}
       <meta property="og:type" content={type} />
-      <meta property="og:site_name" content="Digifier UK" />
+      <meta property="og:site_name" content={SITE.siteName} />
       <meta property="og:locale" content="en_GB" />
       <meta property="og:title" content={full} />
       <meta property="og:description" content={description} />

@@ -74,7 +74,7 @@ export default function Pricing() {
             ))}
           </div>
           <p className="note center">
-            All prices are in pounds sterling (GBP) and include VAT. SEO plans typically range £50–£500/month depending on scope.
+            All prices are in pounds sterling (GBP) and {SITE.pricesIncludeVat ? 'include' : 'exclude'} VAT. SEO plans typically range £50–£500/month depending on scope.
             Final quotes are confirmed in writing before any work begins.
           </p>
         </div>

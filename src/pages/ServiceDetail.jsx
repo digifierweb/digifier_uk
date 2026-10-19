@@ -25,7 +25,7 @@ function dataFaqs(s) {
     ? `Packages start at ${fmt(Math.min(...priced.map(priceOf)))} (${VAT_LABEL}): ${priced.map((p) => `${p.name} ${fmt(priceOf(p))}${p.per || ''}`).join(', ')}. Your written quote confirms the final price before any work starts.`
     : s.fromPrice
       ? `Plans start from ${fmt(s.fromPrice.price)}${s.fromPrice.per} (${VAT_LABEL}). Your written quote confirms the final price before any work starts.`
-      : 'Every project is scoped individually. After a free consultation we send a fixed GBP quote, including VAT, before any work starts.'
+      : `Every project is scoped individually. After a free consultation we send a fixed GBP quote${SITE.pricesIncludeVat ? ', including VAT,' : ''} before any work starts.`
   const faqs = [[`How much does ${s.title.toLowerCase()} cost?`, cost]]
   const pkg = (s.packages || []).find((p) => p.popular) || s.packages?.[0]
   if (pkg) faqs.push([`What is included in the ${pkg.name} package?`, `${pkg.features.join('; ')}.`])
